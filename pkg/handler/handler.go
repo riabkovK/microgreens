@@ -1,16 +1,19 @@
 package handler
 
 import (
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/riabkovK/microgreens/pkg/service"
 )
 
 type Handler struct {
-	service *service.Service
+	service  *service.Service
+	validate *validator.Validate
 }
 
 func NewHandler(services *service.Service) *Handler {
-	return &Handler{service: services}
+	return &Handler{service: services,
+		validate: validator.New(validator.WithRequiredStructEnabled())}
 }
 
 func (h *Handler) SetupRoutes(app *fiber.App) {
