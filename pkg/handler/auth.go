@@ -16,6 +16,10 @@ func (h *Handler) signUp(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
+	if err := h.validate.Struct(request); err != nil {
+		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
+	}
+
 	id, err := h.services.Authorization.CreateUser(request)
 	if err != nil {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
@@ -41,6 +45,10 @@ func (h *Handler) signIn(c *fiber.Ctx) error {
 	request := signInRequest{}
 
 	if err := c.BodyParser(&request); err != nil {
+		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	if err := h.validate.Struct(request); err != nil {
 		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
