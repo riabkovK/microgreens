@@ -7,12 +7,12 @@ import (
 )
 
 type Handler struct {
-	service  *service.Service
+	services *service.Service
 	validate *validator.Validate
 }
 
 func NewHandler(services *service.Service) *Handler {
-	return &Handler{service: services,
+	return &Handler{services: services,
 		validate: validator.New(validator.WithRequiredStructEnabled())}
 }
 
