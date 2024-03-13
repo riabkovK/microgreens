@@ -1,8 +1,13 @@
 package service
 
-import "github.com/riabkovK/microgreens/internal/storage"
+import (
+	"github.com/riabkovK/microgreens/internal"
+	"github.com/riabkovK/microgreens/internal/storage"
+)
 
 type Authorization interface {
+	CreateUser(user internal.User) (int, error)
+	GenerateToken(email, password string) (string, error)
 }
 
 type MicrogreensList interface {
@@ -18,5 +23,7 @@ type Service struct {
 }
 
 func NewService(storages *storage.Storage) *Service {
-	return &Service{}
+	return &Service{
+		Authorization: NewAuthService(storages.Authorization),
+	}
 }
