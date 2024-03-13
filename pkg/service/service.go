@@ -8,6 +8,7 @@ import (
 type Authorization interface {
 	CreateUser(user internal.User) (int, error)
 	GenerateToken(email, password string) (string, error)
+	ParseToken(accessToken string) (int, error)
 }
 
 type MicrogreensList interface {
