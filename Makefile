@@ -7,10 +7,13 @@
 # Project
 # ................................................................................................ #
 export PROJECT_NAME 			:= microgreens
-export PROJECT_VERSION          :=
+export PROJECT_VERSION          := 0.0.1
 export PROJECT_ROOT             := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 export PROJECT_BIN              := $(PROJECT_ROOT)/bin
+export PROJECT_CMD              := $(PROJECT_ROOT)/cmd
+export PROJECT_BUILD            := $(PROJECT_ROOT)/build
 export PROJECT_DB_MIGRATION     := $(PROJECT_ROOT)/db_migration
+export GO                       ?= go
 
 # Postgres
 # ................................................................................................ #
@@ -18,6 +21,25 @@ export DB_NAME                  ?= postgres
 export POSTGRES_CONTAINER_NAME  := "$(PROJECT_NAME)-$(DB_NAME)"
 export POSTGRES_HOST_PORT       := 5436
 export SQL_MIGRATION            := $(PROJECT_DB_MIGRATION)/sql
+
+# Buildmode
+# ................................................................................................ #
+export DEBUG_BUILDMODE          := debug
+export RELEASE_BUILDMODE        := release
+
+# CI/CD
+# ................................................................................................ #
+export CI_ARTIFACTS_DIR         ?=
+
+# Development containers
+# ................................................................................................ #
+export DEV_CONTAINER_NAME       := dev.$(PROJECT_NAME).v$(PROJECT_VERSION)
+export DEV_IMAGE_NAME           := $(DEV_CONTAINER_NAME)
+
+# Golang variables
+# ................................................................................................ #
+export GOPROXY                  ?= https://proxy.golang.org
+export GOSUMDB                  ?=
 
 # Text colors
 # ................................................................................................ #
@@ -31,12 +53,23 @@ export BOLD                     := \033[1m
 export ENDCOLOR                 := \033[0m
 
 
+# Inputs for the '*/debug' commands
+# ................................................................................................ #
+args = $(foreach a,$($(subst -,_,$1)_args),$(if $(value $a),$a="$($a)"))
+
+##@ App
+
+.PHONY: app/debug
+app/debug: ## Run app through delve debugger
+	@dlv --listen=:2375 --headless=true --api-version=2 --accept-multiclient debug $(PROJECT_CMD)/main.go -- $(args)
+
+
 ##@ Postgres
 
 .PHONY: postgres/run
 postgres/run: ## Run container with postgres database
 	@docker run \
-	--name=$(POSTGRES_DB_NAME) \
+	--name=$(POSTGRES_CONTAINER_NAME) \
 	-e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
 	--publish $(POSTGRES_HOST_PORT):5432 \
 	-d \
@@ -45,12 +78,12 @@ postgres/run: ## Run container with postgres database
 
 .PHONY: postgres/destroy
 postgres/destroy: ## Stop and remove container with postgres database
-	@docker ps -q --filter "name=$(POSTGRES_DB_NAME)" | grep -q . && docker stop -s 9 $(POSTGRES_DB_NAME) || true
-	@docker container ls -a -q --filter "name=$(POSTGRES_DB_NAME)" | grep -q . && docker container rm -f $(POSTGRES_DB_NAME) || true
+	@docker ps -q --filter "name=$(POSTGRES_CONTAINER_NAME)" | grep -q . && docker stop -s 9 $(POSTGRES_CONTAINER_NAME) || true
+	@docker container ls -a -q --filter "name=$(POSTGRES_CONTAINER_NAME)" | grep -q . && docker container rm -f $(POSTGRES_CONTAINER_NAME) || true
 
 .PHONY: postgres/psql
 postgres/psql: ## Attach to psql in postgres container
-	@docker exec -it $(POSTGRES_DB_NAME) /bin/bash -c "psql -U postgres"
+	@docker exec -it $(POSTGRES_CONTAINER_NAME) /bin/bash -c "psql -U postgres"
 
 .PHONY: postgres/migrate/up
 postgres/migrate/up: ## Start all postgres migration files with postfix "up"
@@ -59,6 +92,66 @@ postgres/migrate/up: ## Start all postgres migration files with postfix "up"
 .PHONY: postgres/migrate/down
 postgres/migrate/down: ## Start all postgres migration files with postfix "down"
 	@migrate -path $(SQL_MIGRATION) -database "$(DB_NAME)://$(DB_NAME):${POSTGRES_PASSWORD}@localhost:$(POSTGRES_HOST_PORT)/$(DB_NAME)?sslmode=disable" down
+
+##@ Maintenance
+
+.PHONY: dependencies
+dependencies: dependencies/go ## Alias to 'dependencies/go'
+
+.PHONY: dependencies/go
+dependencies/go: ## Install all Go dependencies and vendor it
+	@$(GO) mod tidy
+	@$(GO) mod vendor
+	@$(GO) mod verify
+
+.PHONY: dependencies/go/restore
+dependencies/go/restore: ## Restore 'vendor' for each component
+	@rm -rf vendor && git restore vendor
+
+##@ Development container
+
+.PHONY: dev
+dev: dev/destroy dev/create dev/up dev/dependencies  ## Create dev container and perform all preparing stuff
+
+.PHONY: dev/%
+dev/%: ## Run make-recipe inside container in interactive mode
+	@echo -e "$(YELLOW)[DEBUG] cmd to exec inside $(DEV_CONTAINER_NAME) container: $(MAKE) $* $(ENDCOLOR)"
+	@docker exec -it $(DEV_CONTAINER_NAME) $(MAKE) $*
+
+.PHONY: dev/create
+dev/create: ## Service dev-container: create container
+	@docker build \
+		--tag $(DEV_IMAGE_NAME) \
+		--build-arg USER_ID=$(shell id -u) \
+		--build-arg USER_NAME=$(USER) \
+		--build-arg GROUP_ID=$(shell id -g) \
+		--build-arg GROUP_NAME=$(USER) \
+		--file ${PROJECT_BUILD}/devcontainer.Dockerfile .
+
+	@docker container create \
+		--name $(DEV_CONTAINER_NAME) \
+		--volume="$(CURDIR):/home/$(USER)/workdir" \
+		--publish 2375:2375 \
+		--workdir /home/$(USER)/workdir \
+		--user "$(shell id -u):$(shell id -g)" \
+		$(DEV_IMAGE_NAME)
+
+.PHONY: dev/down
+dev/down: ## Service dev-container: stop container
+	@docker ps -q --filter "name=$(DEV_CONTAINER_NAME)" | grep -q . && docker stop -s 9 $(DEV_CONTAINER_NAME) || true
+
+.PHONY: dev/up
+dev/up: ## Service dev-container: start container
+	@-docker start $(DEV_CONTAINER_NAME)
+
+.PHONY: dev/shell
+dev/shell: ## Service dev-container: attach to container terminal for manual entering tasks
+	@docker exec -it $(DEV_CONTAINER_NAME) bash
+
+.PHONY: dev/destroy
+dev/destroy: dev/down ## Service dev-container: destroy container and its image
+	@docker container ls -a -q --filter "name=$(DEV_CONTAINER_NAME)" | grep -q . && docker container rm -f $(DEV_CONTAINER_NAME) || true
+	@docker image ls -q --filter "reference=$(DEV_IMAGE_NAME)" | grep -q . && docker image rm -f $(DEV_IMAGE_NAME) || true
 
 .PHONY: help
 help:
