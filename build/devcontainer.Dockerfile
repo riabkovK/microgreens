@@ -41,4 +41,6 @@ RUN wget https://go.dev/dl/go$GOLANG_VERSION.linux-amd64.tar.gz -O ~/go-$GOLANG_
 RUN go install github.com/go-delve/delve/cmd/dlv@latest && \
     sudo cp /home/$USER_NAME/go/bin/dlv /usr/bin/dlv
 
+RUN git config --global --add safe.directory ../
+
 ENTRYPOINT ["sleep", "infinity"]
