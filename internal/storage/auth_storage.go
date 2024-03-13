@@ -81,9 +81,9 @@ func (as *AuthStorage) addUser(email, name, password string) error {
 
 	as.mu.Lock()
 	as.users[email] = internal.User{
-		Email:        email,
-		Name:         name,
-		PasswordHash: password}
+		Email:    email,
+		Name:     name,
+		Password: password}
 	as.mu.Unlock()
 
 	return nil
@@ -172,7 +172,7 @@ func (ah *AuthHandler) SignIn(c *fiber.Ctx) error {
 	}
 
 	hashedPassword := hashPassword(regReq.Password)
-	if user.PasswordHash != hashedPassword {
+	if user.Password != hashedPassword {
 		logrus.Error(errBadCredentials)
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
