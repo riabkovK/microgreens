@@ -23,7 +23,7 @@ func (h *Handler) SetupRoutes(app *fiber.App) {
 		auth.Post("sign-in", h.signIn)
 	}
 
-	api := app.Group("/api")
+	api := app.Group("/api", h.userIdentity)
 
 	{
 		lists := api.Group("lists")
