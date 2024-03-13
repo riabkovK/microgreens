@@ -1,17 +1,8 @@
 package handler
 
 import (
-	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/riabkovK/microgreens/internal"
-)
-
-// Errors
-var (
-	errUserAlreadyExist = errors.New("the user is already exist")
-	errUserNotFound     = errors.New("user not found")
-	errUserNameIsNotSet = errors.New("user name is not set")
-	errBadCredentials   = errors.New("email or password is incorrect")
 )
 
 type signUpResponse struct {
