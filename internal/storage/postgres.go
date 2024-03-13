@@ -6,6 +6,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	usersTable                 = "users"
+	microgreensListTable       = "microgreens_list"
+	microgreensFamilyTable     = "microgreens_family"
+	microgreensItemTable       = "microgreens_item"
+	usersMicrogreensListsTable = "users_microgreens_lists"
+)
+
 type Config struct {
 	Host     string
 	Port     string
