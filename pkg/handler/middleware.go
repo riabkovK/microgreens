@@ -27,5 +27,5 @@ func (h *Handler) userIdentity(c *fiber.Ctx) error {
 	}
 
 	c.Locals(userCtx, userId)
-	return nil
+	return c.Next()
 }
