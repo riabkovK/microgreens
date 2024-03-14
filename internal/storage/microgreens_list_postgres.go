@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/riabkovK/microgreens/internal"
+	"strings"
 )
 
 type MicrogreensListPostgres struct {
@@ -39,9 +40,9 @@ func (mlsp *MicrogreensListPostgres) Create(userId int, list internal.Microgreen
 
 func (mlsp *MicrogreensListPostgres) GetAll(userId int) ([]internal.MicrogreensList, error) {
 	var lists []internal.MicrogreensList
-	query := fmt.Sprintf(`SELECT tl.id, tl.name, tl.description FROM %s AS tl 
-                                INNER JOIN %s as ul ON tl.id = ul.microgreens_list_id 
-                                WHERE ul.user_id = $1`,
+	query := fmt.Sprintf(`SELECT ml.id, ml.name, ml.description FROM %s AS ml 
+                                INNER JOIN %s as uml ON ml.id = uml.microgreens_list_id 
+                                WHERE uml.user_id = $1`,
 		microgreensListTable, usersMicrogreensListsTable)
 	err := mlsp.db.Select(&lists, query, userId)
 
@@ -50,11 +51,55 @@ func (mlsp *MicrogreensListPostgres) GetAll(userId int) ([]internal.MicrogreensL
 
 func (mlsp *MicrogreensListPostgres) GetById(userId, listId int) (internal.MicrogreensList, error) {
 	list := internal.MicrogreensList{}
-	query := fmt.Sprintf(`SELECT tl.id, tl.name, tl.description FROM %s AS tl 
-                                INNER JOIN %s as ul ON tl.id = ul.microgreens_list_id 
-                                WHERE ul.user_id = $1 AND ul.microgreens_list_id = $2`,
+	query := fmt.Sprintf(`SELECT ml.id, ml.name, ml.description FROM %s AS ml 
+                                INNER JOIN %s as uml ON ml.id = uml.microgreens_list_id 
+                                WHERE uml.user_id = $1 AND uml.microgreens_list_id = $2`,
 		microgreensListTable, usersMicrogreensListsTable)
 	err := mlsp.db.Get(&list, query, userId, listId)
 
 	return list, err
+}
+
+func (mlsp *MicrogreensListPostgres) Delete(userId, listId int) error {
+	query := fmt.Sprintf(`DELETE FROM %s AS ml USING %s AS uml
+								WHERE ml.id = uml.microgreens_list_id AND uml.user_id = $1 AND uml.microgreens_list_id = $2`,
+		microgreensListTable, usersMicrogreensListsTable)
+	_, err := mlsp.db.Exec(query, userId, listId)
+
+	return err
+}
+
+func (mlsp *MicrogreensListPostgres) Update(userId, listId int, request internal.UpdateMicrogreensListRequest) error {
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argID := 1
+
+	if request.Name != nil {
+		setValues = append(setValues, fmt.Sprintf("name=$%d", argID))
+		args = append(args, *request.Name)
+		argID++
+	}
+
+	if request.Description != nil {
+		setValues = append(setValues, fmt.Sprintf("description=$%d", argID))
+		args = append(args, *request.Description)
+		argID++
+	}
+
+	if request.MicrogreensFamilyId != nil {
+		setValues = append(setValues, fmt.Sprintf("microgreens_family_id=$%d", argID))
+		args = append(args, *request.MicrogreensFamilyId)
+		argID++
+	}
+
+	setQuery := strings.Join(setValues, ", ")
+
+	query := fmt.Sprintf(`UPDATE %s AS ml SET %s FROM %s AS uml
+								 WHERE ml.id = uml.microgreens_list_id AND uml.microgreens_list_id=$%d 
+									AND uml.user_id=$%d`,
+		microgreensListTable, setQuery, usersMicrogreensListsTable, argID, argID+1)
+	args = append(args, listId, userId)
+
+	_, err := mlsp.db.Exec(query, args...)
+	return err
 }

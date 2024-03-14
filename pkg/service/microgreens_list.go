@@ -24,3 +24,14 @@ func (mls *MicrogreensListService) GetAll(userId int) ([]internal.MicrogreensLis
 func (mls *MicrogreensListService) GetById(userId, listId int) (internal.MicrogreensList, error) {
 	return mls.storages.GetById(userId, listId)
 }
+
+func (mls *MicrogreensListService) Delete(userId, listId int) error {
+	return mls.storages.Delete(userId, listId)
+}
+
+func (mls *MicrogreensListService) Update(userId, listId int, request internal.UpdateMicrogreensListRequest) error {
+	if err := request.Validate(); err != nil {
+		return err
+	}
+	return mls.storages.Update(userId, listId, request)
+}

@@ -14,6 +14,8 @@ type MicrogreensList interface {
 	Create(userId int, list internal.MicrogreensList) (int, error)
 	GetAll(userId int) ([]internal.MicrogreensList, error)
 	GetById(userId, listId int) (internal.MicrogreensList, error)
+	Delete(userId, listId int) error
+	Update(userId, listId int, request internal.UpdateMicrogreensListRequest) error
 }
 
 type MicrogreensItem interface {
