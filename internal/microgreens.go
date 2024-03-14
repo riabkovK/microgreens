@@ -2,20 +2,20 @@ package internal
 
 type MicrogreensList struct {
 	Id                  int    `json:"id"`
-	Name                string `json:"name"`
-	MicrogreensFamilyId int    `json:"family"`
+	Name                string `json:"name" validate:"required"`
+	MicrogreensFamilyId int    `json:"family" validate:"required"`
 }
 
 type MicrogreensFamily struct {
 	Id   int    `json:"id"`
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required"`
 }
 
 type MicrogreensItem struct {
 	Id                  int    `json:"id"`
-	Name                string `json:"name"`
-	MicrogreensFamilyId int    `json:"family"`
-	Price               int    `json:"price"`
+	Name                string `json:"name" validate:"required"`
+	MicrogreensFamilyId int    `json:"family" validate:"required"`
+	Price               int    `json:"price" validate:"required"`
 }
 
 type UsersMicrogreensList struct {
