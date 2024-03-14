@@ -50,9 +50,11 @@ func (h *Handler) SetupRoutes(app *fiber.App) {
 
 		families := api.Group("families")
 		{
-			families.Get("/:id", h.getItemById)
-			families.Put("/:id", h.updateItem)
-			families.Delete("/:id", h.deleteItem)
+			families.Post("/")
+			families.Get("/")
+			families.Get("/:id")
+			families.Put("/:id")
+			families.Delete("/:id")
 		}
 
 	}
