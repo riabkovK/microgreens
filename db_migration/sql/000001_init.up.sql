@@ -14,13 +14,15 @@ CREATE TABLE microgreens_family (
 CREATE TABLE microgreens_list (
     id int PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name varchar(255) NOT NULL,
-    microgreens_family_id int REFERENCES microgreens_family(id) ON DELETE CASCADE NOT NULL
+    description varchar(255),
+    microgreens_family_id int REFERENCES microgreens_family(id) ON DELETE CASCADE
 );
 
 CREATE TABLE microgreens_item (
     id int PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name varchar(255) NOT NULL,
-    microgreens_family_id int REFERENCES microgreens_family(id) ON DELETE CASCADE NOT NULL ,
+    description varchar(255),
+    microgreens_family_id int REFERENCES microgreens_family(id) ON DELETE CASCADE,
     price numeric NOT NULL
 );
 
