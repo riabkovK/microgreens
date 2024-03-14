@@ -73,7 +73,6 @@ postgres/run: ## Run container with postgres database
 	-e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
 	--publish $(POSTGRES_HOST_PORT):5432 \
 	-d \
-	--rm \
 	postgres
 
 .PHONY: postgres/destroy
