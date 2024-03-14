@@ -11,6 +11,7 @@ type Authorization interface {
 }
 
 type MicrogreensList interface {
+	Create(userId int, list internal.MicrogreensList) (int, error)
 }
 
 type MicrogreensItem interface {
