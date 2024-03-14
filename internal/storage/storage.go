@@ -13,6 +13,7 @@ type Authorization interface {
 type MicrogreensList interface {
 	Create(userId int, list internal.MicrogreensList) (int, error)
 	GetAll(userId int) ([]internal.MicrogreensList, error)
+	GetById(userId, listId int) (internal.MicrogreensList, error)
 }
 
 type MicrogreensItem interface {

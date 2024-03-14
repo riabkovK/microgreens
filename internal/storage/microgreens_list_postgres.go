@@ -38,10 +38,23 @@ func (mlsp *MicrogreensListPostgres) Create(userId int, list internal.Microgreen
 }
 
 func (mlsp *MicrogreensListPostgres) GetAll(userId int) ([]internal.MicrogreensList, error) {
-	lists := []internal.MicrogreensList{}
-	query := fmt.Sprintf("SELECT tl.id, tl.name, tl.description FROM %s AS tl INNER JOIN %s as ul ON tl.id = ul.microgreens_list_id WHERE ul.user_id = $1",
+	var lists []internal.MicrogreensList
+	query := fmt.Sprintf(`SELECT tl.id, tl.name, tl.description FROM %s AS tl 
+                                INNER JOIN %s as ul ON tl.id = ul.microgreens_list_id 
+                                WHERE ul.user_id = $1`,
 		microgreensListTable, usersMicrogreensListsTable)
 	err := mlsp.db.Select(&lists, query, userId)
 
 	return lists, err
+}
+
+func (mlsp *MicrogreensListPostgres) GetById(userId, listId int) (internal.MicrogreensList, error) {
+	list := internal.MicrogreensList{}
+	query := fmt.Sprintf(`SELECT tl.id, tl.name, tl.description FROM %s AS tl 
+                                INNER JOIN %s as ul ON tl.id = ul.microgreens_list_id 
+                                WHERE ul.user_id = $1 AND ul.microgreens_list_id = $2`,
+		microgreensListTable, usersMicrogreensListsTable)
+	err := mlsp.db.Get(&list, query, userId, listId)
+
+	return list, err
 }

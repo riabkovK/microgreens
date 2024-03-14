@@ -20,3 +20,7 @@ func (mls *MicrogreensListService) Create(userId int, list internal.MicrogreensL
 func (mls *MicrogreensListService) GetAll(userId int) ([]internal.MicrogreensList, error) {
 	return mls.storages.GetAll(userId)
 }
+
+func (mls *MicrogreensListService) GetById(userId, listId int) (internal.MicrogreensList, error) {
+	return mls.storages.GetById(userId, listId)
+}
