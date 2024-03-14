@@ -29,3 +29,14 @@ func (h *Handler) userIdentity(c *fiber.Ctx) error {
 	c.Locals(userCtx, userId)
 	return c.Next()
 }
+
+func getUserId(c *fiber.Ctx) (int, error) {
+	id, ok := c.Locals(userCtx).(int)
+	if !ok {
+		return 0, newErrorResponse(c, fiber.StatusInternalServerError, "user id from context is not type of int")
+	}
+	if id == 0 {
+		return 0, newErrorResponse(c, fiber.StatusInternalServerError, "user id not found")
+	}
+	return id, nil
+}

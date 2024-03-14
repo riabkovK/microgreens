@@ -25,6 +25,7 @@ type Storage struct {
 
 func NewSQLStorage(db *sqlx.DB) *Storage {
 	return &Storage{
-		Authorization: NewAuthPostgres(db),
+		Authorization:   NewAuthPostgres(db),
+		MicrogreensList: NewMicrogreensListPostgres(db),
 	}
 }

@@ -21,6 +21,18 @@ func (mlsp *MicrogreensListPostgres) Create(userId int, list internal.Microgreen
 	}
 
 	var id int
-	createListQuery := fmt.Sprintf("INSERT INTO %s (name, micr) VALUES ($1, $2) RETURNING id", microgreensListTable)
-	row := tx.QueryRow(createListQuery, list.Name, list.MicrogreensFamilyId)
+	createMicrogreensListQuery := fmt.Sprintf("INSERT INTO %s (name, description) VALUES ($1, $2) RETURNING id", microgreensListTable)
+	row := tx.QueryRow(createMicrogreensListQuery, list.Name, list.Description)
+	if err := row.Scan(&id); err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	createUsersMicrogreensListQuery := fmt.Sprintf("INSERT INTO %s (user_id, microgreens_list_id) VALUES ($1, $2)", usersMicrogreensListsTable)
+	_, err = tx.Exec(createUsersMicrogreensListQuery, userId, id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, tx.Commit()
 }

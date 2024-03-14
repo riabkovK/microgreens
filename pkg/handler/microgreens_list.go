@@ -3,17 +3,16 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/riabkovK/microgreens/internal"
-	"github.com/sirupsen/logrus"
-	"strconv"
 )
 
+type response struct {
+	Id int `json:"id"`
+}
+
 func (h *Handler) createList(c *fiber.Ctx) error {
-	id, err := c.Locals(userCtx).(int)
-	if !err {
-		return newErrorResponse(c, fiber.StatusInternalServerError, "user id from context is not type of int")
-	}
-	if id == 0 {
-		return newErrorResponse(c, fiber.StatusInternalServerError, "user id not found")
+	userId, err := getUserId(c)
+	if err != nil {
+		return err
 	}
 
 	request := internal.MicrogreensList{}
@@ -21,9 +20,12 @@ func (h *Handler) createList(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	// call service method
-	logrus.Warning("i'm here. Id is - %v", id)
-	return c.Status(fiber.StatusCreated).JSON(signInResponse{AccessToken: strconv.Itoa(id)})
+	id, err := h.services.MicrogreensList.Create(userId, request)
+	if err != nil {
+		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(response{Id: id})
 }
 
 func (h *Handler) getAllList(c *fiber.Ctx) error {

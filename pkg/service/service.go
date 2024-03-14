@@ -26,6 +26,7 @@ type Service struct {
 
 func NewService(storages *storage.Storage) *Service {
 	return &Service{
-		Authorization: NewAuthService(storages.Authorization),
+		Authorization:   NewAuthService(storages.Authorization),
+		MicrogreensList: NewMicrogreensListService(storages.MicrogreensList),
 	}
 }

@@ -38,10 +38,22 @@ func (h *Handler) SetupRoutes(app *fiber.App) {
 			{
 				items.Post("/", h.createItem)
 				items.Get("/", h.getAllItem)
-				items.Get("/:item_id", h.getItemById)
-				items.Put("/:item_id", h.updateItem)
-				items.Delete("/:item_id", h.deleteItem)
 			}
 		}
+
+		items := api.Group("items")
+		{
+			items.Get("/:id", h.getItemById)
+			items.Put("/:id", h.updateItem)
+			items.Delete("/:id", h.deleteItem)
+		}
+
+		families := api.Group("families")
+		{
+			families.Get("/:id", h.getItemById)
+			families.Put("/:id", h.updateItem)
+			families.Delete("/:id", h.deleteItem)
+		}
+
 	}
 }
