@@ -23,6 +23,10 @@ type getAllListResponse struct {
 	Data []internal.MicrogreensList `json:"data"`
 }
 
+type getAllItemsResponse struct {
+	Data []internal.MicrogreensItem `json:"data"`
+}
+
 type statusResponse struct {
 	Status string
 }

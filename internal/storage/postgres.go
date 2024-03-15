@@ -11,6 +11,7 @@ const (
 	microgreensListTable       = "microgreens_list"
 	microgreensFamilyTable     = "microgreens_family"
 	microgreensItemTable       = "microgreens_item"
+	microgreensListsItemsTable = "microgreens_list_items"
 	usersMicrogreensListsTable = "users_microgreens_lists"
 )
 

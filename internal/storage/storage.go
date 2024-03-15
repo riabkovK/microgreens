@@ -19,6 +19,9 @@ type MicrogreensList interface {
 }
 
 type MicrogreensItem interface {
+	Create(listId int, microgreensItem internal.MicrogreensItem) (int, error)
+	GetAll(userId, listId int) ([]internal.MicrogreensItem, error)
+	GetById(userId, itemId int) (internal.MicrogreensItem, error)
 }
 
 type Storage struct {
@@ -31,5 +34,6 @@ func NewSQLStorage(db *sqlx.DB) *Storage {
 	return &Storage{
 		Authorization:   NewAuthPostgres(db),
 		MicrogreensList: NewMicrogreensListPostgres(db),
+		MicrogreensItem: NewMicrogreensItemPostgres(db),
 	}
 }

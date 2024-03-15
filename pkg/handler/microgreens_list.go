@@ -9,11 +9,15 @@ import (
 func (h *Handler) createList(c *fiber.Ctx) error {
 	userId, err := getUserId(c)
 	if err != nil {
-		return err
+		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	request := internal.MicrogreensList{}
 	if err := c.BodyParser(&request); err != nil {
+		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	if err := h.validate.Struct(request); err != nil {
 		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
@@ -25,10 +29,10 @@ func (h *Handler) createList(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(responseWithId{Id: id})
 }
 
-func (h *Handler) getAllList(c *fiber.Ctx) error {
+func (h *Handler) getAllLists(c *fiber.Ctx) error {
 	userId, err := getUserId(c)
 	if err != nil {
-		return err
+		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	lists, err := h.services.MicrogreensList.GetAll(userId)
@@ -42,7 +46,7 @@ func (h *Handler) getAllList(c *fiber.Ctx) error {
 func (h *Handler) getListById(c *fiber.Ctx) error {
 	userId, err := getUserId(c)
 	if err != nil {
-		return err
+		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	microgreensListId, err := strconv.Atoi(c.Params("id"))
@@ -61,7 +65,7 @@ func (h *Handler) getListById(c *fiber.Ctx) error {
 func (h *Handler) updateList(c *fiber.Ctx) error {
 	userId, err := getUserId(c)
 	if err != nil {
-		return err
+		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	microgreensListId, err := strconv.Atoi(c.Params("id"))
@@ -71,6 +75,10 @@ func (h *Handler) updateList(c *fiber.Ctx) error {
 
 	request := internal.UpdateMicrogreensListRequest{}
 	if err := c.BodyParser(&request); err != nil {
+		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	if err := h.validate.Struct(request); err != nil {
 		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
@@ -84,7 +92,7 @@ func (h *Handler) updateList(c *fiber.Ctx) error {
 func (h *Handler) deleteList(c *fiber.Ctx) error {
 	userId, err := getUserId(c)
 	if err != nil {
-		return err
+		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	microgreensListId, err := strconv.Atoi(c.Params("id"))

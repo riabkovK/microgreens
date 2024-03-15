@@ -3,10 +3,9 @@ package internal
 import "errors"
 
 type MicrogreensList struct {
-	Id                  int    `json:"id" db:"id"`
-	Name                string `json:"name" db:"name" validate:"required"`
-	Description         string `json:"description" db:"description"`
-	MicrogreensFamilyId int    `json:"microgreens_family_id" db:"microgreens_family_id"`
+	Id          int    `json:"id" db:"id"`
+	Name        string `json:"name" db:"name" validate:"required"`
+	Description string `json:"description" db:"description"`
 }
 
 type MicrogreensFamily struct {
@@ -18,8 +17,8 @@ type MicrogreensItem struct {
 	Id                  int    `json:"id" db:"id" `
 	Name                string `json:"name" db:"name" validate:"required"`
 	Description         string `json:"description" db:"description"`
-	MicrogreensFamilyId int    `json:"microgreens_family_id" db:"microgreens_family_id"`
 	Price               int    `json:"price" db:"price" validate:"required"`
+	MicrogreensFamilyId int    `json:"microgreens_family_id" db:"microgreens_family_id" validate:"required"`
 }
 
 type UsersMicrogreensList struct {
@@ -28,14 +27,25 @@ type UsersMicrogreensList struct {
 	MicrogreensListId int
 }
 
+type MicrogreensListItems struct {
+	Id                int
+	MicrogreensListId int
+	MicrogreensItemId int
+}
+
+type MicrogreensFamilyItems struct {
+	Id                  int
+	MicrogreensFamilyId int
+	MicrogreensItemId   int
+}
+
 type UpdateMicrogreensListRequest struct {
-	Name                *string `json:"name"`
-	Description         *string `json:"description"`
-	MicrogreensFamilyId *int    `json:"microgreens_family_id"`
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
 }
 
 func (receiver UpdateMicrogreensListRequest) Validate() error {
-	if receiver.Name == nil && receiver.Description == nil && receiver.MicrogreensFamilyId == nil {
+	if receiver.Name == nil && receiver.Description == nil {
 		return errors.New("update microgreensList structure has no values")
 	}
 	return nil

@@ -25,7 +25,9 @@ func (mlsp *MicrogreensListPostgres) Create(userId int, list internal.Microgreen
 	createMicrogreensListQuery := fmt.Sprintf("INSERT INTO %s (name, description) VALUES ($1, $2) RETURNING id", microgreensListTable)
 	row := tx.QueryRow(createMicrogreensListQuery, list.Name, list.Description)
 	if err := row.Scan(&id); err != nil {
-		tx.Rollback()
+		if err1 := tx.Rollback(); err1 != nil {
+			return 0, err1
+		}
 		return 0, err
 	}
 
@@ -41,7 +43,7 @@ func (mlsp *MicrogreensListPostgres) Create(userId int, list internal.Microgreen
 func (mlsp *MicrogreensListPostgres) GetAll(userId int) ([]internal.MicrogreensList, error) {
 	var lists []internal.MicrogreensList
 	query := fmt.Sprintf(`SELECT ml.id, ml.name, ml.description FROM %s AS ml 
-                                INNER JOIN %s as uml ON ml.id = uml.microgreens_list_id 
+                                INNER JOIN %s AS uml ON ml.id = uml.microgreens_list_id 
                                 WHERE uml.user_id = $1`,
 		microgreensListTable, usersMicrogreensListsTable)
 	err := mlsp.db.Select(&lists, query, userId)
@@ -83,12 +85,6 @@ func (mlsp *MicrogreensListPostgres) Update(userId, listId int, request internal
 	if request.Description != nil {
 		setValues = append(setValues, fmt.Sprintf("description=$%d", argID))
 		args = append(args, *request.Description)
-		argID++
-	}
-
-	if request.MicrogreensFamilyId != nil {
-		setValues = append(setValues, fmt.Sprintf("microgreens_family_id=$%d", argID))
-		args = append(args, *request.MicrogreensFamilyId)
 		argID++
 	}
 

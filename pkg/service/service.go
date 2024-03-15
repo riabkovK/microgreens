@@ -20,17 +20,25 @@ type MicrogreensList interface {
 }
 
 type MicrogreensItem interface {
+	Create(userId, listId int, microgreensItem internal.MicrogreensItem) (int, error)
+	GetAll(userId, listId int) ([]internal.MicrogreensItem, error)
+	GetById(userId, itemId int) (internal.MicrogreensItem, error)
+}
+
+type MicrogreensFamily interface {
 }
 
 type Service struct {
 	Authorization
 	MicrogreensList
 	MicrogreensItem
+	MicrogreensFamily
 }
 
 func NewService(storages *storage.Storage) *Service {
 	return &Service{
 		Authorization:   NewAuthService(storages.Authorization),
 		MicrogreensList: NewMicrogreensListService(storages.MicrogreensList),
+		MicrogreensItem: NewMicrogreensItemService(storages.MicrogreensItem, storages.MicrogreensList),
 	}
 }

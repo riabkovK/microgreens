@@ -29,7 +29,7 @@ func (h *Handler) SetupRoutes(app *fiber.App) {
 		lists := api.Group("lists")
 		{
 			lists.Post("/", h.createList)
-			lists.Get("/", h.getAllList)
+			lists.Get("/", h.getAllLists)
 			lists.Get("/:id", h.getListById)
 			lists.Put("/:id", h.updateList)
 			lists.Delete("/:id", h.deleteList)
@@ -37,7 +37,7 @@ func (h *Handler) SetupRoutes(app *fiber.App) {
 			items := lists.Group(":id/items")
 			{
 				items.Post("/", h.createItem)
-				items.Get("/", h.getAllItem)
+				items.Get("/", h.getAllItems)
 			}
 		}
 
