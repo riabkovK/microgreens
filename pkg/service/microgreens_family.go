@@ -30,5 +30,8 @@ func (mfs *MicrogreensFamilyService) Delete(familyId int) error {
 }
 
 func (mfs *MicrogreensFamilyService) Update(familyId int, request internal.UpdateMicrogreensFamilyRequest) error {
+	if err := request.Validate(); err != nil {
+		return err
+	}
 	return mfs.storages.Update(familyId, request)
 }
