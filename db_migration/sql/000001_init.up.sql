@@ -9,7 +9,7 @@ CREATE TABLE users (
 CREATE TABLE microgreens_family (
     id int PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name varchar(255) UNIQUE NOT NULL,
-    description varchar(255)
+    description text
 );
 
 CREATE TABLE microgreens_list (
@@ -21,7 +21,7 @@ CREATE TABLE microgreens_list (
 CREATE TABLE microgreens_item (
     id int PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name varchar(255) NOT NULL,
-    description varchar(255),
+    description text,
     price numeric NOT NULL,
     microgreens_family_id int REFERENCES microgreens_family(id) ON DELETE CASCADE NOT NULL
 );
