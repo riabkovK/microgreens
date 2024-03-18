@@ -23,22 +23,21 @@ func (mis *MicrogreensItemService) Create(userId, listId int, microgreensItem in
 	return mis.storages.Create(listId, microgreensItem)
 }
 
-func (mls *MicrogreensItemService) GetAll(userId, listId int) ([]internal.MicrogreensItem, error) {
-	return mls.storages.GetAll(userId, listId)
+func (mis *MicrogreensItemService) GetAll(userId, listId int) ([]internal.MicrogreensItem, error) {
+	return mis.storages.GetAll(userId, listId)
 }
 
-func (mls *MicrogreensItemService) GetById(userId, itemId int) (internal.MicrogreensItem, error) {
-	return mls.storages.GetById(userId, itemId)
+func (mis *MicrogreensItemService) GetById(userId, itemId int) (internal.MicrogreensItem, error) {
+	return mis.storages.GetById(userId, itemId)
 }
 
-//
-//func (mls *MicrogreensItemService) Delete(userId, listId int) error {
-//	return mls.storages.Delete(userId, listId)
-//}
-//
-//func (mls *MicrogreensItemService) Update(userId, listId int, request internal.UpdateMicrogreensListRequest) error {
-//	if err := request.Validate(); err != nil {
-//		return err
-//	}
-//	return mls.storages.Update(userId, listId, request)
-//}
+func (mis *MicrogreensItemService) Delete(userId, listId int) error {
+	return mis.storages.Delete(userId, listId)
+}
+
+func (mis *MicrogreensItemService) Update(userId, itemId int, request internal.UpdateMicrogreensItemRequest) error {
+	if err := request.Validate(); err != nil {
+		return err
+	}
+	return mis.storages.Update(userId, itemId, request)
+}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/riabkovK/microgreens/internal"
+	"strings"
 )
 
 type MicrogreensItemPostgres struct {
@@ -69,4 +70,55 @@ func (mip *MicrogreensItemPostgres) GetById(userId, itemId int) (internal.Microg
 	err := mip.db.Select(&item, query, itemId, userId)
 
 	return item, err
+}
+
+func (mip *MicrogreensItemPostgres) Update(userId, itemId int, request internal.UpdateMicrogreensItemRequest) error {
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argID := 1
+
+	if request.Name != nil {
+		setValues = append(setValues, fmt.Sprintf("name=$%d", argID))
+		args = append(args, *request.Name)
+		argID++
+	}
+
+	if request.Description != nil {
+		setValues = append(setValues, fmt.Sprintf("description=$%d", argID))
+		args = append(args, *request.Description)
+		argID++
+	}
+
+	if request.Price != nil {
+		setValues = append(setValues, fmt.Sprintf("price=$%d", argID))
+		args = append(args, *request.Price)
+		argID++
+	}
+
+	if request.MicrogreensFamilyId != nil {
+		setValues = append(setValues, fmt.Sprintf("microgreens_family_id=$%d", argID))
+		args = append(args, *request.MicrogreensFamilyId)
+		argID++
+	}
+
+	setQuery := strings.Join(setValues, ", ")
+
+	query := fmt.Sprintf(`UPDATE %s AS mi SET %s FROM %s AS mli, %s as uml
+                       			 WHERE mi.id = mli.microgreens_item_id AND mli.microgreens_list_id = uml.microgreens_list_id
+								 AND uml.user_id = $%d AND mi.id = $%d`,
+		microgreensItemTable, setQuery, microgreensListTable, usersMicrogreensListsTable, argID, argID+1)
+	args = append(args, userId, itemId)
+
+	_, err := mip.db.Exec(query, args...)
+	return err
+}
+
+func (mip *MicrogreensItemPostgres) Delete(userId, itemId int) error {
+	query := fmt.Sprintf(`DELETE FROM %s AS mi USING %s AS mli, %s as uml
+								WHERE mi.id = mli.microgreens_item_id AND mli.microgreens_list_id = uml.microgreens_list_id
+								AND uml.user_id = $1 AND mi.id = $2`,
+		microgreensItemTable, microgreensListsItemsTable, usersMicrogreensListsTable)
+	_, err := mip.db.Exec(query, userId, itemId)
+
+	return err
 }

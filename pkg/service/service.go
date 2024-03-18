@@ -23,6 +23,8 @@ type MicrogreensItem interface {
 	Create(userId, listId int, microgreensItem internal.MicrogreensItem) (int, error)
 	GetAll(userId, listId int) ([]internal.MicrogreensItem, error)
 	GetById(userId, itemId int) (internal.MicrogreensItem, error)
+	Delete(userId, itemId int) error
+	Update(userId, itemId int, request internal.UpdateMicrogreensItemRequest) error
 }
 
 type MicrogreensFamily interface {
