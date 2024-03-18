@@ -11,8 +11,9 @@ type MicrogreensList struct {
 }
 
 type MicrogreensFamily struct {
-	Id   int    `json:"id" db:"id"`
-	Name string `json:"name" db:"name" validate:"required"`
+	Id          int    `json:"id" db:"id"`
+	Name        string `json:"name" db:"name" validate:"required"`
+	Description string `json:"description" db:"description"`
 }
 
 type MicrogreensItem struct {
@@ -49,6 +50,18 @@ type UpdateMicrogreensListRequest struct {
 }
 
 func (receiver UpdateMicrogreensListRequest) Validate() error {
+	if receiver.Name == nil && receiver.Description == nil {
+		return errors.New("update microgreensList structure has no values")
+	}
+	return nil
+}
+
+type UpdateMicrogreensFamilyRequest struct {
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+}
+
+func (receiver UpdateMicrogreensFamilyRequest) Validate() error {
 	if receiver.Name == nil && receiver.Description == nil {
 		return errors.New("update microgreensList structure has no values")
 	}

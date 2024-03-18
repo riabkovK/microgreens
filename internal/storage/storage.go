@@ -26,16 +26,26 @@ type MicrogreensItem interface {
 	Update(userId, itemId int, request internal.UpdateMicrogreensItemRequest) error
 }
 
+type MicrogreensFamily interface {
+	Create(family internal.MicrogreensFamily) (int, error)
+	GetAll() ([]internal.MicrogreensFamily, error)
+	GetById(familyId int) (internal.MicrogreensFamily, error)
+	Delete(familyId int) error
+	Update(familyId int, request internal.UpdateMicrogreensFamilyRequest) error
+}
+
 type Storage struct {
 	Authorization
 	MicrogreensList
 	MicrogreensItem
+	MicrogreensFamily
 }
 
 func NewSQLStorage(db *sqlx.DB) *Storage {
 	return &Storage{
-		Authorization:   NewAuthPostgres(db),
-		MicrogreensList: NewMicrogreensListPostgres(db),
-		MicrogreensItem: NewMicrogreensItemPostgres(db),
+		Authorization:     NewAuthPostgres(db),
+		MicrogreensList:   NewMicrogreensListPostgres(db),
+		MicrogreensItem:   NewMicrogreensItemPostgres(db),
+		MicrogreensFamily: NewMicrogreensFamilyPostgres(db),
 	}
 }

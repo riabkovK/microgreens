@@ -40,7 +40,7 @@ func (h *Handler) getAllLists(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(getAllListResponse{Data: lists})
+	return c.Status(fiber.StatusOK).JSON(getAllResponse[internal.MicrogreensList]{Data: lists})
 }
 
 func (h *Handler) getListById(c *fiber.Ctx) error {

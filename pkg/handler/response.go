@@ -19,14 +19,14 @@ type responseWithId struct {
 	Id int `json:"id"`
 }
 
-type getAllListResponse struct {
-	Data []internal.MicrogreensList `json:"data"`
-}
-
-type getAllItemsResponse struct {
-	Data []internal.MicrogreensItem `json:"data"`
-}
-
 type statusResponse struct {
 	Status string
+}
+
+type microgreensStructures interface {
+	internal.MicrogreensList | internal.MicrogreensItem | internal.MicrogreensFamily
+}
+
+type getAllResponse[T microgreensStructures] struct {
+	Data []T
 }

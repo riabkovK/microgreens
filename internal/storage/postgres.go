@@ -7,12 +7,13 @@ import (
 )
 
 const (
-	usersTable                 = "users"
-	microgreensListTable       = "microgreens_list"
-	microgreensFamilyTable     = "microgreens_family"
-	microgreensItemTable       = "microgreens_item"
-	microgreensListsItemsTable = "microgreens_list_items"
-	usersMicrogreensListsTable = "users_microgreens_lists"
+	usersTable                  = "users"
+	microgreensListTable        = "microgreens_list"
+	microgreensFamilyTable      = "microgreens_family"
+	microgreensItemTable        = "microgreens_item"
+	microgreensListsItemsTable  = "microgreens_list_items"
+	usersMicrogreensListsTable  = "users_microgreens_lists"
+	microgreensFamilyItemsTable = "microgreens_family_items"
 )
 
 type Config struct {

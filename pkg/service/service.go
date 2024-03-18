@@ -28,6 +28,11 @@ type MicrogreensItem interface {
 }
 
 type MicrogreensFamily interface {
+	Create(family internal.MicrogreensFamily) (int, error)
+	GetAll() ([]internal.MicrogreensFamily, error)
+	GetById(familyId int) (internal.MicrogreensFamily, error)
+	Delete(familyId int) error
+	Update(familyId int, request internal.UpdateMicrogreensFamilyRequest) error
 }
 
 type Service struct {
@@ -39,8 +44,9 @@ type Service struct {
 
 func NewService(storages *storage.Storage) *Service {
 	return &Service{
-		Authorization:   NewAuthService(storages.Authorization),
-		MicrogreensList: NewMicrogreensListService(storages.MicrogreensList),
-		MicrogreensItem: NewMicrogreensItemService(storages.MicrogreensItem, storages.MicrogreensList),
+		Authorization:     NewAuthService(storages.Authorization),
+		MicrogreensList:   NewMicrogreensListService(storages.MicrogreensList),
+		MicrogreensItem:   NewMicrogreensItemService(storages.MicrogreensItem, storages.MicrogreensList),
+		MicrogreensFamily: NewMicrogreensFamilyService(storages.MicrogreensFamily),
 	}
 }
