@@ -62,13 +62,19 @@ func (mlp *MicrogreensListPostgres) GetById(userId, listId int) (internal.Microg
 	return list, err
 }
 
-func (mlp *MicrogreensListPostgres) Delete(userId, listId int) error {
+func (mlp *MicrogreensListPostgres) Delete(userId, listId int) (int, error) {
 	query := fmt.Sprintf(`DELETE FROM %s AS ml USING %s AS uml
 								WHERE ml.id = uml.microgreens_list_id AND uml.user_id = $1 AND uml.microgreens_list_id = $2`,
 		microgreensListTable, usersMicrogreensListsTable)
-	_, err := mlp.db.Exec(query, userId, listId)
+	result, err := mlp.db.Exec(query, userId, listId)
+	if err != nil {
+		return 0, err
+	}
 
-	return err
+	// list is not exist if rowsAmount == 0
+	rowsAmount, err := result.RowsAffected()
+
+	return int(rowsAmount), err
 }
 
 func (mlp *MicrogreensListPostgres) Update(userId, listId int, request internal.UpdateMicrogreensListRequest) error {

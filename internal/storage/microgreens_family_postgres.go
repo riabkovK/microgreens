@@ -42,12 +42,18 @@ func (mfp *MicrogreensFamilyPostgres) GetById(familyId int) (internal.Microgreen
 	return family, err
 }
 
-func (mfp *MicrogreensFamilyPostgres) Delete(itemId int) error {
+func (mfp *MicrogreensFamilyPostgres) Delete(itemId int) (int, error) {
 	query := fmt.Sprintf("DELETE FROM %s AS mf WHERE mf.id = $1", microgreensFamilyTable)
-	// TODO add amount of deleted raws
-	_, err := mfp.db.Exec(query, itemId)
 
-	return err
+	result, err := mfp.db.Exec(query, itemId)
+	if err != nil {
+		return 0, err
+	}
+
+	// family is not exist if rowsAmount == 0
+	rowsAmount, err := result.RowsAffected()
+
+	return int(rowsAmount), err
 }
 
 func (mfp *MicrogreensFamilyPostgres) Update(familyId int, request internal.UpdateMicrogreensFamilyRequest) error {

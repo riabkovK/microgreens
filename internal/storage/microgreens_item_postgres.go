@@ -23,7 +23,7 @@ func (mip *MicrogreensItemPostgres) Create(listId int, microgreensItem internal.
 
 	var itemID int
 	createItemQuery := fmt.Sprintf(`INSERT INTO %s (name, description, price, microgreens_family_id) 
-										   VALUES ($1, $2, $3, $4, $5) RETURNING ID`, microgreensItemTable)
+										   VALUES ($1, $2, $3, $4) RETURNING ID`, microgreensItemTable)
 
 	row := tx.QueryRow(createItemQuery, microgreensItem.Name, microgreensItem.Description, microgreensItem.Price, microgreensItem.MicrogreensFamilyId)
 	err = row.Scan(&itemID)
@@ -46,9 +46,8 @@ func (mip *MicrogreensItemPostgres) Create(listId int, microgreensItem internal.
 		return 0, err
 	}
 
-	// FIXME
 	// Fill microgreens_family_items table
-	createFamilyItemQuery := fmt.Sprintf(`INSERT INTO %s (microgreens_family_id, microgreens_item_id) 
+	createFamilyItemQuery := fmt.Sprintf(`INSERT INTO %s (microgreens_family_id, microgreens_item_id)
 										   	     VALUES ($1, $2)`, microgreensFamilyItemsTable)
 
 	_, err = tx.Exec(createFamilyItemQuery, microgreensItem.MicrogreensFamilyId, itemID)
@@ -64,7 +63,7 @@ func (mip *MicrogreensItemPostgres) Create(listId int, microgreensItem internal.
 
 func (mip *MicrogreensItemPostgres) GetAll(userId, listId int) ([]internal.MicrogreensItem, error) {
 	var items []internal.MicrogreensItem
-	query := fmt.Sprintf(`SELECT mi.id, mi.name, mi.description FROM %s AS mi 
+	query := fmt.Sprintf(`SELECT mi.id, mi.name, mi.description, mi.price, mi.microgreens_family_id FROM %s AS mi 
                                 INNER JOIN %s AS mli ON mli.microgreens_item_id = mi.id
                                 INNER JOIN %s AS uml ON uml.microgreens_list_id = mli.microgreens_list_id
                                 WHERE mli.microgreens_list_id = $1 AND uml.user_id = $2`,
@@ -86,14 +85,20 @@ func (mip *MicrogreensItemPostgres) GetById(userId, itemId int) (internal.Microg
 	return item, err
 }
 
-func (mip *MicrogreensItemPostgres) Delete(userId, itemId int) error {
+func (mip *MicrogreensItemPostgres) Delete(userId, itemId int) (int, error) {
 	query := fmt.Sprintf(`DELETE FROM %s AS mi USING %s AS mli, %s as uml
 								WHERE mi.id = mli.microgreens_item_id AND mli.microgreens_list_id = uml.microgreens_list_id
 								AND uml.user_id = $1 AND mi.id = $2`,
 		microgreensItemTable, microgreensListsItemsTable, usersMicrogreensListsTable)
-	_, err := mip.db.Exec(query, userId, itemId)
+	result, err := mip.db.Exec(query, userId, itemId)
+	if err != nil {
+		return 0, err
+	}
 
-	return err
+	// item is not exist if rowsAmount == 0
+	rowsAmount, err := result.RowsAffected()
+
+	return int(rowsAmount), err
 }
 
 func (mip *MicrogreensItemPostgres) Update(userId, itemId int, request internal.UpdateMicrogreensItemRequest) error {
@@ -127,10 +132,10 @@ func (mip *MicrogreensItemPostgres) Update(userId, itemId int, request internal.
 
 	setQuery := strings.Join(setValues, ", ")
 
-	query := fmt.Sprintf(`UPDATE %s AS mi SET %s FROM %s AS mli, %s as uml
+	query := fmt.Sprintf(`UPDATE %s AS mi SET %s FROM %s AS mli, %s AS uml
                        			 WHERE mi.id = mli.microgreens_item_id AND mli.microgreens_list_id = uml.microgreens_list_id
 								 AND uml.user_id = $%d AND mi.id = $%d`,
-		microgreensItemTable, setQuery, microgreensListTable, usersMicrogreensListsTable, argID, argID+1)
+		microgreensItemTable, setQuery, microgreensListsItemsTable, usersMicrogreensListsTable, argID, argID+1)
 	args = append(args, userId, itemId)
 
 	_, err := mip.db.Exec(query, args...)

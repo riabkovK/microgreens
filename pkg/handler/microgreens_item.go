@@ -110,11 +110,14 @@ func (h *Handler) deleteItem(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusBadRequest, "invalid id param")
 	}
 
-	err = h.services.MicrogreensItem.Delete(userId, itemId)
+	rows, err := h.services.MicrogreensItem.Delete(userId, itemId)
 	if err != nil {
 		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	// FIXME no status in response ??
+	if rows == 0 {
+		return c.SendStatus(fiber.StatusNoContent)
+	}
+
 	return c.Status(fiber.StatusOK).JSON(statusResponse{Status: "Successfully removed"})
 }

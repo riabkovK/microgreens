@@ -100,10 +100,14 @@ func (h *Handler) deleteList(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusBadRequest, "invalid id param")
 	}
 
-	err = h.services.MicrogreensList.Delete(userId, microgreensListId)
+	rows, err := h.services.MicrogreensList.Delete(userId, microgreensListId)
 	if err != nil {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusNoContent).JSON(statusResponse{Status: "Successfully removed"})
+	if rows == 0 {
+		return c.SendStatus(fiber.StatusNoContent)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(statusResponse{Status: "Successfully removed"})
 }

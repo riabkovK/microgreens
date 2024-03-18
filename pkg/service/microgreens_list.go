@@ -25,7 +25,7 @@ func (mls *MicrogreensListService) GetById(userId, listId int) (internal.Microgr
 	return mls.storages.GetById(userId, listId)
 }
 
-func (mls *MicrogreensListService) Delete(userId, listId int) error {
+func (mls *MicrogreensListService) Delete(userId, listId int) (int, error) {
 	return mls.storages.Delete(userId, listId)
 }
 

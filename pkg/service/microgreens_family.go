@@ -25,7 +25,7 @@ func (mfs *MicrogreensFamilyService) GetById(familyId int) (internal.Microgreens
 	return mfs.storages.GetById(familyId)
 }
 
-func (mfs *MicrogreensFamilyService) Delete(familyId int) error {
+func (mfs *MicrogreensFamilyService) Delete(familyId int) (int, error) {
 	return mfs.storages.Delete(familyId)
 }
 

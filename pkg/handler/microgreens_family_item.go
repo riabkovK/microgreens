@@ -75,10 +75,14 @@ func (h *Handler) deleteFamily(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusBadRequest, "invalid id param")
 	}
 
-	err = h.services.MicrogreensFamily.Delete(familyId)
+	rows, err := h.services.MicrogreensFamily.Delete(familyId)
 	if err != nil {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusNoContent).JSON(statusResponse{Status: "Successfully removed"})
+	if rows == 0 {
+		return c.SendStatus(fiber.StatusNoContent)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(statusResponse{Status: "Successfully removed"})
 }

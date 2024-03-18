@@ -31,7 +31,7 @@ func (mis *MicrogreensItemService) GetById(userId, itemId int) (internal.Microgr
 	return mis.storages.GetById(userId, itemId)
 }
 
-func (mis *MicrogreensItemService) Delete(userId, listId int) error {
+func (mis *MicrogreensItemService) Delete(userId, listId int) (int, error) {
 	return mis.storages.Delete(userId, listId)
 }
 
