@@ -4,6 +4,9 @@ import (
 	"github.com/riabkovK/microgreens/internal/storage"
 	"github.com/riabkovK/microgreens/pkg/handler"
 	"github.com/riabkovK/microgreens/pkg/service"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -45,7 +48,24 @@ func main() {
 
 	handlers.SetupRoutes(app)
 
-	logrus.Fatal(app.Listen(":" + viper.GetString("app.port")))
+	go func() {
+		logrus.Fatal(app.Listen(":" + viper.GetString("app.port")))
+	}()
+
+	logrus.Print("Microgreens Web App started")
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	<-quit
+
+	logrus.Print("Microgreens Web App shutting down")
+	if err = app.Shutdown(); err != nil {
+		logrus.Errorf("error occured on server shutting down: %v", err)
+	}
+
+	if err = db.Close(); err != nil {
+		logrus.Errorf("error occured on db connection close: %v", err)
+	}
 }
 
 func initConfig() error {
