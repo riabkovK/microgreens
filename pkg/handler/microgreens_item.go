@@ -50,7 +50,7 @@ func (h *Handler) getAllItems(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(getAllItemsResponse{Data: items})
+	return c.Status(fiber.StatusOK).JSON(getAllResponse[internal.MicrogreensItem]{Data: items})
 }
 
 func (h *Handler) getItemById(c *fiber.Ctx) error {
@@ -115,5 +115,6 @@ func (h *Handler) deleteItem(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
+	// FIXME no status in response ??
 	return c.Status(fiber.StatusOK).JSON(statusResponse{Status: "Successfully removed"})
 }

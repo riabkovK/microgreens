@@ -34,10 +34,24 @@ func (mip *MicrogreensItemPostgres) Create(listId int, microgreensItem internal.
 		return 0, err
 	}
 
+	// Fill microgreens_list_items table
 	createListItemQuery := fmt.Sprintf(`INSERT INTO %s (microgreens_list_id, microgreens_item_id) 
 										   	   VALUES ($1, $2)`, microgreensListsItemsTable)
 
 	_, err = tx.Exec(createListItemQuery, listId, itemID)
+	if err != nil {
+		if err1 := tx.Rollback(); err != nil {
+			return 0, err1
+		}
+		return 0, err
+	}
+
+	// FIXME
+	// Fill microgreens_family_items table
+	createFamilyItemQuery := fmt.Sprintf(`INSERT INTO %s (microgreens_family_id, microgreens_item_id) 
+										   	     VALUES ($1, $2)`, microgreensFamilyItemsTable)
+
+	_, err = tx.Exec(createFamilyItemQuery, microgreensItem.MicrogreensFamilyId, itemID)
 	if err != nil {
 		if err1 := tx.Rollback(); err != nil {
 			return 0, err1
@@ -67,9 +81,19 @@ func (mip *MicrogreensItemPostgres) GetById(userId, itemId int) (internal.Microg
                                 INNER JOIN %s AS uml ON uml.microgreens_list_id = mli.microgreens_list_id
                                 WHERE mi.id = $1 AND uml.user_id = $2`,
 		microgreensItemTable, microgreensListsItemsTable, usersMicrogreensListsTable)
-	err := mip.db.Select(&item, query, itemId, userId)
+	err := mip.db.Get(&item, query, itemId, userId)
 
 	return item, err
+}
+
+func (mip *MicrogreensItemPostgres) Delete(userId, itemId int) error {
+	query := fmt.Sprintf(`DELETE FROM %s AS mi USING %s AS mli, %s as uml
+								WHERE mi.id = mli.microgreens_item_id AND mli.microgreens_list_id = uml.microgreens_list_id
+								AND uml.user_id = $1 AND mi.id = $2`,
+		microgreensItemTable, microgreensListsItemsTable, usersMicrogreensListsTable)
+	_, err := mip.db.Exec(query, userId, itemId)
+
+	return err
 }
 
 func (mip *MicrogreensItemPostgres) Update(userId, itemId int, request internal.UpdateMicrogreensItemRequest) error {
@@ -110,15 +134,5 @@ func (mip *MicrogreensItemPostgres) Update(userId, itemId int, request internal.
 	args = append(args, userId, itemId)
 
 	_, err := mip.db.Exec(query, args...)
-	return err
-}
-
-func (mip *MicrogreensItemPostgres) Delete(userId, itemId int) error {
-	query := fmt.Sprintf(`DELETE FROM %s AS mi USING %s AS mli, %s as uml
-								WHERE mi.id = mli.microgreens_item_id AND mli.microgreens_list_id = uml.microgreens_list_id
-								AND uml.user_id = $1 AND mi.id = $2`,
-		microgreensItemTable, microgreensListsItemsTable, usersMicrogreensListsTable)
-	_, err := mip.db.Exec(query, userId, itemId)
-
 	return err
 }
