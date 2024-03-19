@@ -32,11 +32,11 @@ func (h *Handler) signUp(c *fiber.Ctx) error {
 
 type (
 	signInRequest struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Email    string `json:"email" validate:"required,email,max=64"`
+		Password string `json:"password" validate:"required,min=8,max=64"`
 	}
 
-	signInResponse struct {
+	TokenResponse struct {
 		AccessToken string `json:"access_token"`
 	}
 )
@@ -57,5 +57,5 @@ func (h *Handler) signIn(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(signInResponse{AccessToken: token})
+	return c.Status(fiber.StatusCreated).JSON(TokenResponse{AccessToken: token})
 }
