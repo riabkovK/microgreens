@@ -1,13 +1,15 @@
 package handler
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/riabkovK/microgreens/internal"
 	"strconv"
+
+	"github.com/gofiber/fiber/v2"
+
+	"github.com/riabkovK/microgreens/internal/domain"
 )
 
 func (h *Handler) createFamily(c *fiber.Ctx) error {
-	request := internal.MicrogreensFamily{}
+	request := domain.MicrogreensFamilyRequest{}
 	if err := c.BodyParser(&request); err != nil {
 		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
@@ -30,7 +32,7 @@ func (h *Handler) getAllFamilies(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(getAllResponse[internal.MicrogreensFamily]{Data: families})
+	return c.Status(fiber.StatusOK).JSON(getAllResponse[domain.MicrogreensFamily]{Data: families})
 }
 
 func (h *Handler) getFamilyById(c *fiber.Ctx) error {
@@ -53,7 +55,7 @@ func (h *Handler) updateFamily(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusBadRequest, "invalid id param")
 	}
 
-	request := internal.UpdateMicrogreensFamilyRequest{}
+	request := domain.UpdateMicrogreensFamilyRequest{}
 	if err := c.BodyParser(&request); err != nil {
 		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}

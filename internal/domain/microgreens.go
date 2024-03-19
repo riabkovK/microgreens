@@ -1,4 +1,4 @@
-package internal
+package domain
 
 import "errors"
 
@@ -6,13 +6,13 @@ import "errors"
 
 type MicrogreensList struct {
 	Id          int    `json:"id" db:"id"`
-	Name        string `json:"name" db:"name" validate:"required"`
+	Name        string `json:"name" db:"name"`
 	Description string `json:"description" db:"description"`
 }
 
 type MicrogreensFamily struct {
 	Id          int    `json:"id" db:"id"`
-	Name        string `json:"name" db:"name" validate:"required"`
+	Name        string `json:"name" db:"name"`
 	Description string `json:"description" db:"description"`
 }
 
@@ -42,19 +42,26 @@ type MicrogreensFamilyItems struct {
 	MicrogreensItemId   int
 }
 
+// Requests
+
+type MicrogreensFamilyRequest struct {
+	Name        string `json:"name" db:"name" validate:"required"`
+	Description string `json:"description" db:"description"`
+}
+
+type MicrogreensListRequest struct {
+	Name        string `json:"name" db:"name" validate:"required"`
+	Description string `json:"description" db:"description"`
+}
+
+type MicrogreensItemRequest struct {
+	Name                string `json:"name" db:"name" validate:"required"`
+	Description         string `json:"description" db:"description"`
+	Price               int    `json:"price" db:"price" validate:"required"`
+	MicrogreensFamilyId int    `json:"microgreens_family_id" db:"microgreens_family_id" validate:"required"`
+}
+
 // Structures for updating
-
-type UpdateMicrogreensListRequest struct {
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-}
-
-func (receiver UpdateMicrogreensListRequest) Validate() error {
-	if receiver.Name == nil && receiver.Description == nil {
-		return errors.New("update microgreensList structure has no values")
-	}
-	return nil
-}
 
 type UpdateMicrogreensFamilyRequest struct {
 	Name        *string `json:"name"`
@@ -62,6 +69,18 @@ type UpdateMicrogreensFamilyRequest struct {
 }
 
 func (receiver UpdateMicrogreensFamilyRequest) Validate() error {
+	if receiver.Name == nil && receiver.Description == nil {
+		return errors.New("update microgreensList structure has no values")
+	}
+	return nil
+}
+
+type UpdateMicrogreensListRequest struct {
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+}
+
+func (receiver UpdateMicrogreensListRequest) Validate() error {
 	if receiver.Name == nil && receiver.Description == nil {
 		return errors.New("update microgreensList structure has no values")
 	}

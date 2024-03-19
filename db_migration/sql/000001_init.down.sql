@@ -8,4 +8,6 @@ DROP TABLE IF EXISTS microgreens_list;
 
 DROP TABLE IF EXISTS microgreens_family;
 
+DROP TABLE IF EXISTS refresh_sessions;
+
 DROP TABLE IF EXISTS users;

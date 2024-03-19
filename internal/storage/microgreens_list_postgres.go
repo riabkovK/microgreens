@@ -2,9 +2,11 @@ package storage
 
 import (
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	"github.com/riabkovK/microgreens/internal"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
+
+	"github.com/riabkovK/microgreens/internal/domain"
 )
 
 type MicrogreensListPostgres struct {
@@ -15,7 +17,7 @@ func NewMicrogreensListPostgres(db *sqlx.DB) *MicrogreensListPostgres {
 	return &MicrogreensListPostgres{db: db}
 }
 
-func (mlp *MicrogreensListPostgres) Create(userId int, list internal.MicrogreensList) (int, error) {
+func (mlp *MicrogreensListPostgres) Create(userId int, list domain.MicrogreensListRequest) (int, error) {
 	tx, err := mlp.db.Begin()
 	if err != nil {
 		return 0, err
@@ -34,14 +36,17 @@ func (mlp *MicrogreensListPostgres) Create(userId int, list internal.Microgreens
 	createUsersMicrogreensListQuery := fmt.Sprintf("INSERT INTO %s (user_id, microgreens_list_id) VALUES ($1, $2)", usersMicrogreensListsTable)
 	_, err = tx.Exec(createUsersMicrogreensListQuery, userId, id)
 	if err != nil {
+		if err1 := tx.Rollback(); err1 != nil {
+			return 0, err1
+		}
 		return 0, err
 	}
 
 	return id, tx.Commit()
 }
 
-func (mlp *MicrogreensListPostgres) GetAll(userId int) ([]internal.MicrogreensList, error) {
-	var lists []internal.MicrogreensList
+func (mlp *MicrogreensListPostgres) GetAll(userId int) ([]domain.MicrogreensList, error) {
+	var lists []domain.MicrogreensList
 	query := fmt.Sprintf(`SELECT ml.id, ml.name, ml.description FROM %s AS ml 
                                 INNER JOIN %s AS uml ON ml.id = uml.microgreens_list_id 
                                 WHERE uml.user_id = $1`,
@@ -51,8 +56,8 @@ func (mlp *MicrogreensListPostgres) GetAll(userId int) ([]internal.MicrogreensLi
 	return lists, err
 }
 
-func (mlp *MicrogreensListPostgres) GetById(userId, listId int) (internal.MicrogreensList, error) {
-	list := internal.MicrogreensList{}
+func (mlp *MicrogreensListPostgres) GetById(userId, listId int) (domain.MicrogreensList, error) {
+	list := domain.MicrogreensList{}
 	query := fmt.Sprintf(`SELECT ml.id, ml.name, ml.description FROM %s AS ml 
                                 INNER JOIN %s as uml ON ml.id = uml.microgreens_list_id 
                                 WHERE uml.user_id = $1 AND uml.microgreens_list_id = $2`,
@@ -77,7 +82,7 @@ func (mlp *MicrogreensListPostgres) Delete(userId, listId int) (int, error) {
 	return int(rowsAmount), err
 }
 
-func (mlp *MicrogreensListPostgres) Update(userId, listId int, request internal.UpdateMicrogreensListRequest) error {
+func (mlp *MicrogreensListPostgres) Update(userId, listId int, request domain.UpdateMicrogreensListRequest) error {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
 	argID := 1

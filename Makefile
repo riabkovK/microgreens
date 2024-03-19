@@ -70,7 +70,7 @@ app/debug: ## Run app through delve debugger
 ##@ Postgres
 
 .PHONY: postgres/run
-postgres/run: ## Run container with postgres database
+postgres/run: postgres/destroy ## Run container with postgres database
 	@docker run \
 	--name=$(POSTGRES_CONTAINER_NAME) \
 	-e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
@@ -100,7 +100,7 @@ postgres/migrate/down: ## Start all postgres migration files with postfix "down"
 	@migrate -path $(SQL_MIGRATION) -database "$(DB_NAME)://$(DB_NAME):${POSTGRES_PASSWORD}@localhost:$(POSTGRES_HOST_PORT)/$(DB_NAME)?sslmode=disable" down 1
 
 .PHONY: postgres/migrate/drop
-postgres/migrate/down: ## Drop all postgres migration files
+postgres/migrate/drop: ## Drop all postgres migration files
 	@migrate -path $(SQL_MIGRATION) -database "$(DB_NAME)://$(DB_NAME):${POSTGRES_PASSWORD}@localhost:$(POSTGRES_HOST_PORT)/$(DB_NAME)?sslmode=disable" drop
 
 ##@ Maintenance

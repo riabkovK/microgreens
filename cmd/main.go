@@ -1,12 +1,11 @@
 package main
 
 import (
-	"github.com/riabkovK/microgreens/internal/storage"
-	"github.com/riabkovK/microgreens/pkg/handler"
-	"github.com/riabkovK/microgreens/pkg/service"
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -14,6 +13,12 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
+	"github.com/riabkovK/microgreens/internal/handler"
+	"github.com/riabkovK/microgreens/internal/service"
+	"github.com/riabkovK/microgreens/internal/storage"
+	"github.com/riabkovK/microgreens/pkg/auth"
+	"github.com/riabkovK/microgreens/pkg/hash"
 )
 
 // TODO Добавить:
@@ -24,6 +29,13 @@ import (
 // 5) swagger
 // 6) CI?
 // 7) UI (на реакте)
+
+const (
+	passwordSalt    = "t3R/i)96DGg{a{d2"
+	jwtSigningKey   = "4>p4UvtV>}46#8hwu%1lF"
+	accessTokenTTL  = 120 * time.Minute   // 2 hours
+	refreshTokenTTL = 24 * time.Hour * 60 // 2 months
+)
 
 func main() {
 	if err := initConfig(); err != nil {
@@ -43,10 +55,23 @@ func main() {
 		logrus.Fatalf("error initializing db: %v", err)
 	}
 
-	storages := storage.NewSQLStorage(db)
-	services := service.NewService(storages)
-	handlers := handler.NewHandler(services)
+	hasher := hash.NewSHA256Hasher(passwordSalt)
+	tokenManager, err := auth.NewJWTManager(jwtSigningKey)
+	if err != nil {
+		logrus.Fatal(err)
+	}
 
+	storages := storage.NewSQLStorage(db)
+	services := service.NewService(service.Deps{
+		Storages:        storages,
+		Hasher:          hasher,
+		JWTManager:      tokenManager,
+		AccessTokenTTL:  accessTokenTTL,
+		RefreshTokenTTL: refreshTokenTTL})
+
+	handlers := handler.NewHandler(services, tokenManager)
+
+	// Fiber server
 	app := fiber.New(fiber.Config{
 		EnablePrintRoutes: viper.GetBool("app.enablePrintRoutes"),
 		ReadBufferSize:    viper.GetInt("app.maxHeaderSize"),
@@ -63,12 +88,19 @@ func main() {
 
 	logrus.Print("Microgreens Web App started")
 
+	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	<-quit
 
 	logrus.Print("Microgreens Web App shutting down")
-	if err = app.Shutdown(); err != nil {
+
+	const timeout = 5 * time.Second
+
+	ctx, shutdown := context.WithTimeout(context.Background(), timeout)
+	defer shutdown()
+
+	if err = app.ShutdownWithContext(ctx); err != nil {
 		logrus.Errorf("error occured on server shutting down: %v", err)
 	}
 

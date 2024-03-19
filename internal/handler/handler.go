@@ -3,24 +3,30 @@ package handler
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/riabkovK/microgreens/pkg/service"
+
+	"github.com/riabkovK/microgreens/internal/service"
+	"github.com/riabkovK/microgreens/pkg/auth"
 )
 
 type Handler struct {
-	services *service.Service
-	validate *validator.Validate
+	services   *service.Service
+	validate   *validator.Validate
+	JWTManager auth.TokenManager
 }
 
-func NewHandler(services *service.Service) *Handler {
-	return &Handler{services: services,
-		validate: validator.New(validator.WithRequiredStructEnabled())}
+func NewHandler(services *service.Service, tokenManager auth.TokenManager) *Handler {
+	return &Handler{
+		services:   services,
+		validate:   validator.New(validator.WithRequiredStructEnabled()),
+		JWTManager: tokenManager}
 }
 
 func (h *Handler) SetupRoutes(app *fiber.App) {
 	auth := app.Group("/auth")
 	{
-		auth.Post("sign-up", h.signUp)
-		auth.Post("sign-in", h.signIn)
+		auth.Post("sign-up", h.userSignUp)
+		auth.Post("sign-in", h.userSignIn)
+		auth.Post("refresh", h.userRefresh)
 	}
 
 	api := app.Group("/api", h.userIdentity)

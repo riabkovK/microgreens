@@ -1,23 +1,20 @@
 package handler
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/riabkovK/microgreens/internal"
 	"strconv"
+
+	"github.com/gofiber/fiber/v2"
+
+	"github.com/riabkovK/microgreens/internal/domain"
 )
 
-func (h *Handler) createItem(c *fiber.Ctx) error {
+func (h *Handler) createList(c *fiber.Ctx) error {
 	userId, err := getUserId(c)
 	if err != nil {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	microgreensListId, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return newErrorResponse(c, fiber.StatusBadRequest, "invalid id param")
-	}
-
-	var request internal.MicrogreensItem
+	request := domain.MicrogreensListRequest{}
 	if err := c.BodyParser(&request); err != nil {
 		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
@@ -26,15 +23,29 @@ func (h *Handler) createItem(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	id, err := h.services.MicrogreensItem.Create(userId, microgreensListId, request)
+	id, err := h.services.MicrogreensList.Create(userId, request)
 	if err != nil {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(responseWithId{Id: id})
+	return c.Status(fiber.StatusCreated).JSON(responseWithId{Id: id})
 }
 
-func (h *Handler) getAllItems(c *fiber.Ctx) error {
+func (h *Handler) getAllLists(c *fiber.Ctx) error {
+	userId, err := getUserId(c)
+	if err != nil {
+		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	lists, err := h.services.MicrogreensList.GetAll(userId)
+	if err != nil {
+		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(getAllResponse[domain.MicrogreensList]{Data: lists})
+}
+
+func (h *Handler) getListById(c *fiber.Ctx) error {
 	userId, err := getUserId(c)
 	if err != nil {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
@@ -45,34 +56,15 @@ func (h *Handler) getAllItems(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusBadRequest, "invalid id param")
 	}
 
-	items, err := h.services.MicrogreensItem.GetAll(userId, microgreensListId)
+	list, err := h.services.MicrogreensList.GetById(userId, microgreensListId)
 	if err != nil {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(getAllResponse[internal.MicrogreensItem]{Data: items})
+	return c.Status(fiber.StatusOK).JSON(list)
 }
 
-func (h *Handler) getItemById(c *fiber.Ctx) error {
-	userId, err := getUserId(c)
-	if err != nil {
-		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
-	}
-
-	itemId, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return newErrorResponse(c, fiber.StatusBadRequest, "invalid id param")
-	}
-
-	item, err := h.services.MicrogreensItem.GetById(userId, itemId)
-	if err != nil {
-		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
-	}
-
-	return c.Status(fiber.StatusOK).JSON(item)
-}
-
-func (h *Handler) updateItem(c *fiber.Ctx) error {
+func (h *Handler) updateList(c *fiber.Ctx) error {
 	userId, err := getUserId(c)
 	if err != nil {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
@@ -83,7 +75,7 @@ func (h *Handler) updateItem(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusBadRequest, "invalid id param")
 	}
 
-	request := internal.UpdateMicrogreensItemRequest{}
+	request := domain.UpdateMicrogreensListRequest{}
 	if err := c.BodyParser(&request); err != nil {
 		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
@@ -92,27 +84,27 @@ func (h *Handler) updateItem(c *fiber.Ctx) error {
 		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	if err := h.services.MicrogreensItem.Update(userId, microgreensListId, request); err != nil {
+	if err := h.services.MicrogreensList.Update(userId, microgreensListId, request); err != nil {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(statusResponse{Status: "ok"})
 }
 
-func (h *Handler) deleteItem(c *fiber.Ctx) error {
+func (h *Handler) deleteList(c *fiber.Ctx) error {
 	userId, err := getUserId(c)
 	if err != nil {
 		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	itemId, err := strconv.Atoi(c.Params("id"))
+	microgreensListId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return newErrorResponse(c, fiber.StatusBadRequest, "invalid id param")
 	}
 
-	rows, err := h.services.MicrogreensItem.Delete(userId, itemId)
+	rows, err := h.services.MicrogreensList.Delete(userId, microgreensListId)
 	if err != nil {
-		return newErrorResponse(c, fiber.StatusBadRequest, err.Error())
+		return newErrorResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	if rows == 0 {

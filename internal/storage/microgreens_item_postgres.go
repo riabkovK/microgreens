@@ -2,9 +2,11 @@ package storage
 
 import (
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	"github.com/riabkovK/microgreens/internal"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
+
+	"github.com/riabkovK/microgreens/internal/domain"
 )
 
 type MicrogreensItemPostgres struct {
@@ -15,7 +17,7 @@ func NewMicrogreensItemPostgres(db *sqlx.DB) *MicrogreensItemPostgres {
 	return &MicrogreensItemPostgres{db: db}
 }
 
-func (mip *MicrogreensItemPostgres) Create(listId int, microgreensItem internal.MicrogreensItem) (int, error) {
+func (mip *MicrogreensItemPostgres) Create(listId int, microgreensItem domain.MicrogreensItemRequest) (int, error) {
 	tx, err := mip.db.Begin()
 	if err != nil {
 		return 0, err
@@ -61,8 +63,8 @@ func (mip *MicrogreensItemPostgres) Create(listId int, microgreensItem internal.
 	return itemID, tx.Commit()
 }
 
-func (mip *MicrogreensItemPostgres) GetAll(userId, listId int) ([]internal.MicrogreensItem, error) {
-	var items []internal.MicrogreensItem
+func (mip *MicrogreensItemPostgres) GetAll(userId, listId int) ([]domain.MicrogreensItem, error) {
+	var items []domain.MicrogreensItem
 	query := fmt.Sprintf(`SELECT mi.id, mi.name, mi.description, mi.price, mi.microgreens_family_id FROM %s AS mi 
                                 INNER JOIN %s AS mli ON mli.microgreens_item_id = mi.id
                                 INNER JOIN %s AS uml ON uml.microgreens_list_id = mli.microgreens_list_id
@@ -73,8 +75,8 @@ func (mip *MicrogreensItemPostgres) GetAll(userId, listId int) ([]internal.Micro
 	return items, err
 }
 
-func (mip *MicrogreensItemPostgres) GetById(userId, itemId int) (internal.MicrogreensItem, error) {
-	var item internal.MicrogreensItem
+func (mip *MicrogreensItemPostgres) GetById(userId, itemId int) (domain.MicrogreensItem, error) {
+	var item domain.MicrogreensItem
 	query := fmt.Sprintf(`SELECT mi.id, mi.name, mi.description, mi.price, mi.microgreens_family_id FROM %s AS mi 
                                 INNER JOIN %s AS mli ON mli.microgreens_item_id = mi.id
                                 INNER JOIN %s AS uml ON uml.microgreens_list_id = mli.microgreens_list_id
@@ -101,7 +103,7 @@ func (mip *MicrogreensItemPostgres) Delete(userId, itemId int) (int, error) {
 	return int(rowsAmount), err
 }
 
-func (mip *MicrogreensItemPostgres) Update(userId, itemId int, request internal.UpdateMicrogreensItemRequest) error {
+func (mip *MicrogreensItemPostgres) Update(userId, itemId int, request domain.UpdateMicrogreensItemRequest) error {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
 	argID := 1
