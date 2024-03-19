@@ -15,6 +15,10 @@ export PROJECT_BUILD            := $(PROJECT_ROOT)/build
 export PROJECT_DB_MIGRATION     := $(PROJECT_ROOT)/db_migration
 export GO                       ?= go
 
+# Migration
+# ................................................................................................ #
+export MIGRATION_NAME           ?=
+
 # Postgres
 # ................................................................................................ #
 export DB_NAME                  ?= postgres
@@ -63,7 +67,6 @@ args = $(foreach a,$($(subst -,_,$1)_args),$(if $(value $a),$a="$($a)"))
 app/debug: ## Run app through delve debugger
 	@dlv --listen=:2375 --headless=true --api-version=2 --accept-multiclient debug $(PROJECT_CMD)/main.go -- $(args)
 
-
 ##@ Postgres
 
 .PHONY: postgres/run
@@ -84,13 +87,21 @@ postgres/destroy: ## Stop and remove container with postgres database
 postgres/psql: ## Attach to psql in postgres container
 	@docker exec -it $(POSTGRES_CONTAINER_NAME) /bin/bash -c "psql -U postgres"
 
+.PHONY: postgres/migrate/create
+postgres/migrate/create: ## Create postgres migration files with custom $MIGRATION_NAME
+	@migrate create -ext sql -dir ./db_migration/sql -seq $(MIGRATION_NAME)
+
 .PHONY: postgres/migrate/up
 postgres/migrate/up: ## Start all postgres migration files with postfix "up"
 	@migrate -path $(SQL_MIGRATION) -database "$(DB_NAME)://$(DB_NAME):${POSTGRES_PASSWORD}@localhost:$(POSTGRES_HOST_PORT)/$(DB_NAME)?sslmode=disable" up
 
 .PHONY: postgres/migrate/down
 postgres/migrate/down: ## Start all postgres migration files with postfix "down"
-	@migrate -path $(SQL_MIGRATION) -database "$(DB_NAME)://$(DB_NAME):${POSTGRES_PASSWORD}@localhost:$(POSTGRES_HOST_PORT)/$(DB_NAME)?sslmode=disable" down
+	@migrate -path $(SQL_MIGRATION) -database "$(DB_NAME)://$(DB_NAME):${POSTGRES_PASSWORD}@localhost:$(POSTGRES_HOST_PORT)/$(DB_NAME)?sslmode=disable" down 1
+
+.PHONY: postgres/migrate/drop
+postgres/migrate/down: ## Drop all postgres migration files
+	@migrate -path $(SQL_MIGRATION) -database "$(DB_NAME)://$(DB_NAME):${POSTGRES_PASSWORD}@localhost:$(POSTGRES_HOST_PORT)/$(DB_NAME)?sslmode=disable" drop
 
 ##@ Maintenance
 
