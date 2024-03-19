@@ -2,8 +2,9 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/riabkovK/microgreens/internal"
 	"github.com/sirupsen/logrus"
+
+	"github.com/riabkovK/microgreens/internal/domain"
 )
 
 type errorResponse struct {
@@ -24,7 +25,7 @@ type statusResponse struct {
 }
 
 type microgreensStructures interface {
-	internal.MicrogreensList | internal.MicrogreensItem | internal.MicrogreensFamily
+	domain.MicrogreensList | domain.MicrogreensItem | domain.MicrogreensFamily
 }
 
 type getAllResponse[T microgreensStructures] struct {

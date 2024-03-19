@@ -2,18 +2,22 @@ package storage
 
 import (
 	"fmt"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	usersTable                  = "users"
-	microgreensListTable        = "microgreens_list"
-	microgreensFamilyTable      = "microgreens_family"
-	microgreensItemTable        = "microgreens_item"
+	usersTable             = "users"
+	microgreensListTable   = "microgreens_list"
+	microgreensFamilyTable = "microgreens_family"
+	microgreensItemTable   = "microgreens_item"
+
 	microgreensListsItemsTable  = "microgreens_list_items"
 	usersMicrogreensListsTable  = "users_microgreens_lists"
 	microgreensFamilyItemsTable = "microgreens_family_items"
+
+	refreshSessionsTable = "refresh_sessions"
 )
 
 type Config struct {

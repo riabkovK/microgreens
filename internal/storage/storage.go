@@ -2,36 +2,39 @@ package storage
 
 import (
 	"github.com/jmoiron/sqlx"
-	"github.com/riabkovK/microgreens/internal"
+
+	"github.com/riabkovK/microgreens/internal/domain"
 )
 
 type Authorization interface {
-	CreateUser(user internal.User) (int, error)
-	GetUser(email, password string) (internal.User, error)
+	CreateUser(user domain.User) (int, error)
+	GetByCredentials(email, passwordHash string) (domain.User, error)
+	GetByRefreshToken(refreshToken string) (domain.User, error)
+	SetSession(userId int, session domain.Session) error
 }
 
 type MicrogreensList interface {
-	Create(userId int, list internal.MicrogreensList) (int, error)
-	GetAll(userId int) ([]internal.MicrogreensList, error)
-	GetById(userId, listId int) (internal.MicrogreensList, error)
+	Create(userId int, list domain.MicrogreensListRequest) (int, error)
+	GetAll(userId int) ([]domain.MicrogreensList, error)
+	GetById(userId, listId int) (domain.MicrogreensList, error)
 	Delete(userId, listId int) (int, error)
-	Update(userId, listId int, request internal.UpdateMicrogreensListRequest) error
+	Update(userId, listId int, request domain.UpdateMicrogreensListRequest) error
 }
 
 type MicrogreensItem interface {
-	Create(listId int, microgreensItem internal.MicrogreensItem) (int, error)
-	GetAll(userId, listId int) ([]internal.MicrogreensItem, error)
-	GetById(userId, itemId int) (internal.MicrogreensItem, error)
+	Create(listId int, microgreensItem domain.MicrogreensItemRequest) (int, error)
+	GetAll(userId, listId int) ([]domain.MicrogreensItem, error)
+	GetById(userId, itemId int) (domain.MicrogreensItem, error)
 	Delete(userId, itemId int) (int, error)
-	Update(userId, itemId int, request internal.UpdateMicrogreensItemRequest) error
+	Update(userId, itemId int, request domain.UpdateMicrogreensItemRequest) error
 }
 
 type MicrogreensFamily interface {
-	Create(family internal.MicrogreensFamily) (int, error)
-	GetAll() ([]internal.MicrogreensFamily, error)
-	GetById(familyId int) (internal.MicrogreensFamily, error)
+	Create(family domain.MicrogreensFamilyRequest) (int, error)
+	GetAll() ([]domain.MicrogreensFamily, error)
+	GetById(familyId int) (domain.MicrogreensFamily, error)
 	Delete(familyId int) (int, error)
-	Update(familyId int, request internal.UpdateMicrogreensFamilyRequest) error
+	Update(familyId int, request domain.UpdateMicrogreensFamilyRequest) error
 }
 
 type Storage struct {

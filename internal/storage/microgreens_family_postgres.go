@@ -2,9 +2,11 @@ package storage
 
 import (
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	"github.com/riabkovK/microgreens/internal"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
+
+	"github.com/riabkovK/microgreens/internal/domain"
 )
 
 type MicrogreensFamilyPostgres struct {
@@ -15,7 +17,7 @@ func NewMicrogreensFamilyPostgres(db *sqlx.DB) *MicrogreensFamilyPostgres {
 	return &MicrogreensFamilyPostgres{db: db}
 }
 
-func (mfp *MicrogreensFamilyPostgres) Create(family internal.MicrogreensFamily) (int, error) {
+func (mfp *MicrogreensFamilyPostgres) Create(family domain.MicrogreensFamilyRequest) (int, error) {
 	var id int
 	query := fmt.Sprintf("INSERT INTO %s (name, description) values ($1, $2) RETURNING id", microgreensFamilyTable)
 	row := mfp.db.QueryRow(query, family.Name, family.Description)
@@ -26,16 +28,16 @@ func (mfp *MicrogreensFamilyPostgres) Create(family internal.MicrogreensFamily) 
 	return id, nil
 }
 
-func (mfp *MicrogreensFamilyPostgres) GetAll() ([]internal.MicrogreensFamily, error) {
-	var families []internal.MicrogreensFamily
+func (mfp *MicrogreensFamilyPostgres) GetAll() ([]domain.MicrogreensFamily, error) {
+	var families []domain.MicrogreensFamily
 	query := fmt.Sprintf("SELECT * FROM %s", microgreensFamilyTable)
 	err := mfp.db.Select(&families, query)
 
 	return families, err
 }
 
-func (mfp *MicrogreensFamilyPostgres) GetById(familyId int) (internal.MicrogreensFamily, error) {
-	var family internal.MicrogreensFamily
+func (mfp *MicrogreensFamilyPostgres) GetById(familyId int) (domain.MicrogreensFamily, error) {
+	var family domain.MicrogreensFamily
 	query := fmt.Sprintf("SELECT * FROM %s AS mf WHERE mf.id = $1", microgreensFamilyTable)
 	err := mfp.db.Get(&family, query, familyId)
 
@@ -56,7 +58,7 @@ func (mfp *MicrogreensFamilyPostgres) Delete(itemId int) (int, error) {
 	return int(rowsAmount), err
 }
 
-func (mfp *MicrogreensFamilyPostgres) Update(familyId int, request internal.UpdateMicrogreensFamilyRequest) error {
+func (mfp *MicrogreensFamilyPostgres) Update(familyId int, request domain.UpdateMicrogreensFamilyRequest) error {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
 	argID := 1
