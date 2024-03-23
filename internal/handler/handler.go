@@ -22,6 +22,11 @@ func NewHandler(services *service.Service, tokenManager auth.TokenManager) *Hand
 }
 
 func (h *Handler) SetupRoutes(app *fiber.App) {
+
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.Status(fiber.StatusOK).SendString("Hello, that's microgreens")
+	})
+
 	auth := app.Group("/auth")
 	{
 		auth.Post("sign-up", h.userSignUp)
