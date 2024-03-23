@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/riabkovK/microgreens/internal/config"
 	"time"
 
 	"github.com/riabkovK/microgreens/internal/domain"
@@ -56,7 +57,17 @@ type Deps struct {
 	RefreshTokenTTL time.Duration
 }
 
-func NewService(deps Deps) *Service {
+func NewDeps(storages *storage.Storage, hasher hash.PasswordHasher, JWTManager auth.TokenManager, cfg *config.Config) *Deps {
+	return &Deps{
+		Storages:        storages,
+		Hasher:          hasher,
+		JWTManager:      JWTManager,
+		AccessTokenTTL:  cfg.Auth.JWT.AccessTokenTTL,
+		RefreshTokenTTL: cfg.Auth.JWT.RefreshTokenTTL,
+	}
+}
+
+func NewService(deps *Deps) *Service {
 	return &Service{
 		Authorization:     NewAuthService(deps.Storages.Authorization, deps.Hasher, deps.JWTManager, deps.AccessTokenTTL, deps.RefreshTokenTTL),
 		MicrogreensList:   NewMicrogreensListService(deps.Storages.MicrogreensList),

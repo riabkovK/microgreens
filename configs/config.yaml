@@ -1,13 +1,18 @@
-app:
+server:
   port: "8000"
-  readTimeout: 10 * time.Second
-  writeTimeout: 10 * time.Second
+  readTimeout: 10s
+  writeTimeout: 10s
   enablePrintRoutes: false
-  maxHeaderSize: 1 << 20
+  maxHeaderMegabytes: 1
 
-db:
+postgres:
   username: "postgres"
   host: "localhost"
   port: "5436"
-  dbname: "postgres"
-  sslmode: "disable"
+  DBName: "postgres"
+  SSLmode: "disable"
+
+auth:
+  jwt:
+    accessTokenTTL: 10m
+    refreshTokenTTL: 1440h
