@@ -138,6 +138,9 @@ func InitConfig() (*Config, error) {
 		return nil, err
 	}
 
+	// Set from .env, because viper cannot unmarshal
+	setFromDotEnv(viperInst, &cfg)
+
 	return &cfg, nil
 }
 
@@ -162,6 +165,12 @@ func unmarshal(viperInst *viper.Viper, cfg *Config) error {
 	}
 
 	return nil
+}
+
+func setFromDotEnv(viperInst *viper.Viper, cfg *Config) {
+	cfg.Postgres.Password = viperInst.GetString("POSTGRES.PASSWORD")
+	cfg.Auth.PasswordSalt = viperInst.GetString("AUTH.PASSWORD_SALT")
+	cfg.Auth.JWT.SigningKey = viperInst.GetString("AUTH.JWT.SIGNING_KEY")
 }
 
 func parseConfigFile(viperInst *viper.Viper, configDir, configFile string) error {
