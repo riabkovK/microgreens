@@ -21,10 +21,17 @@ export MIGRATION_NAME           ?=
 
 # Postgres
 # ................................................................................................ #
+export SQL_MIGRATION            := $(PROJECT_DB_MIGRATION)/sql
 export DB_NAME                  ?= postgres
 export POSTGRES_CONTAINER_NAME  := "$(PROJECT_NAME)-$(DB_NAME)"
+export POSTGRES_HOSTNAME        := localhost
 export POSTGRES_HOST_PORT       := 5436
-export SQL_MIGRATION            := $(PROJECT_DB_MIGRATION)/sql
+export POSTGRES_SSL_MODE        := disable
+ifneq (${MG_CFG_POSTGRESS.PASSWORD},)
+	export POSTGRES_PASSWORD    := ${MG_CFG_POSTGRES.PASSWORD}
+else
+	export POSTGRES_PASSWORD    := ${POSTGRES.PASSWORD}
+endif
 
 # Buildmode
 # ................................................................................................ #
@@ -73,7 +80,7 @@ app/debug: ## Run app through delve debugger
 postgres/run: postgres/destroy ## Run container with postgres database
 	@docker run \
 	--name=$(POSTGRES_CONTAINER_NAME) \
-	-e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+	-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
 	--publish $(POSTGRES_HOST_PORT):5432 \
 	-d \
 	postgres
@@ -93,15 +100,15 @@ postgres/migrate/create: ## Create postgres migration files with custom $MIGRATI
 
 .PHONY: postgres/migrate/up
 postgres/migrate/up: ## Start all postgres migration files with postfix "up"
-	@migrate -path $(SQL_MIGRATION) -database "$(DB_NAME)://$(DB_NAME):${POSTGRES_PASSWORD}@localhost:$(POSTGRES_HOST_PORT)/$(DB_NAME)?sslmode=disable" up
+	@migrate -path $(SQL_MIGRATION) -database "$(DB_NAME)://$(DB_NAME):$(POSTGRES_PASSWORD)@$(POSTGRES_HOSTNAME):$(POSTGRES_HOST_PORT)/$(DB_NAME)?sslmode=$(POSTGRES_SSL_MODE)" up
 
 .PHONY: postgres/migrate/down
 postgres/migrate/down: ## Start all postgres migration files with postfix "down"
-	@migrate -path $(SQL_MIGRATION) -database "$(DB_NAME)://$(DB_NAME):${POSTGRES_PASSWORD}@localhost:$(POSTGRES_HOST_PORT)/$(DB_NAME)?sslmode=disable" down 1
+	@migrate -path $(SQL_MIGRATION) -database "$(DB_NAME)://$(DB_NAME):$(POSTGRES_PASSWORD)@$(POSTGRES_HOSTNAME):$(POSTGRES_HOST_PORT)/$(DB_NAME)?sslmode=$(POSTGRES_SSL_MODE)" down 1
 
 .PHONY: postgres/migrate/drop
 postgres/migrate/drop: ## Drop all postgres migration files
-	@migrate -path $(SQL_MIGRATION) -database "$(DB_NAME)://$(DB_NAME):${POSTGRES_PASSWORD}@localhost:$(POSTGRES_HOST_PORT)/$(DB_NAME)?sslmode=disable" drop
+	@migrate -path $(SQL_MIGRATION) -database "$(DB_NAME)://$(DB_NAME):$(POSTGRES_PASSWORD)@$(POSTGRES_HOSTNAME):$(POSTGRES_HOST_PORT)/$(DB_NAME)?sslmode=$(POSTGRES_SSL_MODE)" drop
 
 ##@ Maintenance
 
