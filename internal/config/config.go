@@ -55,43 +55,43 @@ type (
 
 	AuthConfig struct {
 		JWT          JWTConfig
-		PasswordSalt string
+		PasswordSalt string `mapstructure:"password_salt" yaml:"password_salt"`
 	}
 
 	PostgresConfig struct {
 		Username string `mapstructure:"username" yaml:"username"`
-		Password string
+		Password string `mapstructure:"password" yaml:"password"`
 		Host     string `mapstructure:"host" yaml:"host"`
 		Port     string `mapstructure:"port" yaml:"port"`
-		DBName   string `mapstructure:"DBName" yaml:"DBName"`
-		SSLMode  string `mapstructure:"SSLMode" yaml:"SSLMode"`
+		DBName   string `mapstructure:"db_name" yaml:"db_name"`
+		SSLMode  string `mapstructure:"ssl_mode" yaml:"ssl_mode"`
 	}
 
 	JWTConfig struct {
-		AccessTokenTTL  time.Duration `mapstructure:"accessTokenTTL" yaml:"accessTokenTTL"`
-		RefreshTokenTTL time.Duration `mapstructure:"refreshTokenTTL" yaml:"refreshTokenTTL"`
-		SigningKey      string
+		AccessTokenTTL  time.Duration `mapstructure:"access_token_ttl" yaml:"access_token_ttl"`
+		RefreshTokenTTL time.Duration `mapstructure:"refresh_token_ttl" yaml:"refresh_token_ttl"`
+		SigningKey      string        `mapstructure:"signing_key" yaml:"signing_key"`
 	}
 
 	ServerConfig struct {
 		Port               string        `mapstructure:"port" yaml:"port"`
-		ReadTimeout        time.Duration `mapstructure:"readTimeout" yaml:"readTimeout"`
-		WriteTimeout       time.Duration `mapstructure:"writeTimeout" yaml:"writeTimeout"`
-		MaxHeaderMegabytes int           `mapstructure:"maxHeaderMegabytes" yaml:"maxHeaderMegabytes"`
-		EnablePrintRoutes  bool          `mapstructure:"enablePrintRoutes" yaml:"enablePrintRoutes"`
+		ReadTimeout        time.Duration `mapstructure:"read_timeout" yaml:"read_timeout"`
+		WriteTimeout       time.Duration `mapstructure:"write_timeout" yaml:"write_timeout"`
+		MaxHeaderMegabytes int           `mapstructure:"max_header_megabytes" yaml:"max_header_megabytes"`
+		EnablePrintRoutes  bool          `mapstructure:"enable_print_routes" yaml:"enable_print_routes"`
 	}
 
 	LoggerConfig struct {
 		Format        string        `mapstructure:"format" yaml:"format"`
-		TimeFormat    string        `mapstructure:"timeFormat" yaml:"timeFormat"`
-		TimeZone      string        `mapstructure:"timeZone" yaml:"timeZone"`
-		TimeInterval  time.Duration `mapstructure:"timeInterval" yaml:"timeInterval"`
+		TimeFormat    string        `mapstructure:"time_format" yaml:"time_format"`
+		TimeZone      string        `mapstructure:"time_zone" yaml:"time_zone"`
+		TimeInterval  time.Duration `mapstructure:"time_interval" yaml:"time_interval"`
 		Output        io.Writer     `mapstructure:"output" yaml:"output"`
-		DisableColors bool          `mapstructure:"disableColors" yaml:"disableColors"`
+		DisableColors bool          `mapstructure:"disable_colors" yaml:"disable_colors"`
 	}
 
 	LimiterConfig struct {
-		KeyGenerator func(*fiber.Ctx) string `mapstructure:"keyGenerator" yaml:"keyGenerator"`
+		KeyGenerator func(*fiber.Ctx) string `mapstructure:"key_generator" yaml:"key_generator"`
 		Max          int                     `mapstructure:"max" yaml:"max"`
 		Expiration   time.Duration           `mapstructure:"expiration" yaml:"expiration"`
 	}
@@ -114,9 +114,6 @@ func InitConfig() (*Config, error) {
 
 	// Init viper instance
 	viperInst := viper.New()
-
-	// Gives the opportunity to override from environment variables
-	viperInst.AutomaticEnv()
 	viperInst.SetEnvPrefix(appEnvPrefix)
 
 	// populate viper instance with defaults envs
@@ -132,14 +129,18 @@ func InitConfig() (*Config, error) {
 		return nil, err
 	}
 
+	// Override viper envs from environment variables
+	viperInst.AutomaticEnv()
+
 	// unmarshal envs in Config struct
 	var cfg Config
 	if err := unmarshal(viperInst, &cfg); err != nil {
 		return nil, err
 	}
 
-	// Set from .env, because viper cannot unmarshal
-	setFromDotEnv(viperInst, &cfg)
+	for _, key := range viperInst.AllKeys() {
+		logrus.Infof("%s: %v", key, viperInst.Get(key))
+	}
 
 	return &cfg, nil
 }
@@ -149,6 +150,9 @@ func unmarshal(viperInst *viper.Viper, cfg *Config) error {
 		return err
 	}
 	if err := viperInst.UnmarshalKey("postgres", &cfg.Postgres); err != nil {
+		return err
+	}
+	if err := viperInst.UnmarshalKey("auth", &cfg.Auth); err != nil {
 		return err
 	}
 	if err := viperInst.UnmarshalKey("auth.jwt", &cfg.Auth.JWT); err != nil {
@@ -179,34 +183,28 @@ func parseDotEnvFile(viperInst *viper.Viper, dotEnvDir string) error {
 	return viperInst.MergeInConfig()
 }
 
-func setFromDotEnv(viperInst *viper.Viper, cfg *Config) {
-	cfg.Postgres.Password = viperInst.GetString("POSTGRES_PASSWORD")
-	cfg.Auth.PasswordSalt = viperInst.GetString("AUTH_PASSWORD_SALT")
-	cfg.Auth.JWT.SigningKey = viperInst.GetString("AUTH_JWT_SIGNING_KEY")
-}
-
 // populateDefault defines defaults values of envs that changes rarely
 func populateDefault(viperInst *viper.Viper) {
 	// Server
 	viperInst.SetDefault("server.port", defaultServerPort)
-	viperInst.SetDefault("server.readTimeout", defaultServerRWTimeout)
-	viperInst.SetDefault("server.writeTimeout", defaultServerRWTimeout)
-	viperInst.SetDefault("server.maxHeaderMegabytes", defaultServerMaxHeaderMegabytes)
+	viperInst.SetDefault("server.read_timeout", defaultServerRWTimeout)
+	viperInst.SetDefault("server.write_timeout", defaultServerRWTimeout)
+	viperInst.SetDefault("server.max_header_megabytes", defaultServerMaxHeaderMegabytes)
 
 	// Auth
-	viperInst.SetDefault("auth.jwt.accessTokenTTL", defaultAuthAccessTokenTTL)
-	viperInst.SetDefault("auth.jwt.refreshTokenTTL", defaultAuthRefreshTokenTTL)
+	viperInst.SetDefault("auth.jwt.access_token_ttl", defaultAuthAccessTokenTTL)
+	viperInst.SetDefault("auth.jwt.refresh_token_ttl", defaultAuthRefreshTokenTTL)
 
 	// Logger
 	viperInst.SetDefault("logger.format", defaultLoggerFormat)
-	viperInst.SetDefault("logger.timeFormat", defaultLoggerTimeFormat)
-	viperInst.SetDefault("logger.timeZone", defaultLoggerTimeZone)
-	viperInst.SetDefault("logger.timeInterval", defaultLoggerTimeInterval)
+	viperInst.SetDefault("logger.time_format", defaultLoggerTimeFormat)
+	viperInst.SetDefault("logger.time_zone", defaultLoggerTimeZone)
+	viperInst.SetDefault("logger.time_interval", defaultLoggerTimeInterval)
 	viperInst.SetDefault("logger.output", defaultLoggerOutput)
-	viperInst.SetDefault("logger.disableColors", defaultLoggerDisableColorsFlag)
+	viperInst.SetDefault("logger.disable_colors", defaultLoggerDisableColorsFlag)
 
 	// Limiter
-	viperInst.SetDefault("limiter.keyGenerator", defaultLimiterKeyGenerator)
+	viperInst.SetDefault("limiter.key_generator", defaultLimiterKeyGenerator)
 	viperInst.SetDefault("limiter.max", defaultLimiterMaxConnections)
 	viperInst.SetDefault("limiter.expiration", defaultLimiterExpiration)
 }
