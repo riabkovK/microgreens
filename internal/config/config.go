@@ -138,10 +138,6 @@ func InitConfig() (*Config, error) {
 		return nil, err
 	}
 
-	for _, key := range viperInst.AllKeys() {
-		logrus.Infof("%s: %v", key, viperInst.Get(key))
-	}
-
 	return &cfg, nil
 }
 
