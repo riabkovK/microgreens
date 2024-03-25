@@ -37,7 +37,7 @@ func (h *Handler) parseAuthHeader(c *fiber.Ctx) (int, error) {
 		return 0, errors.New("token is empty")
 	}
 
-	return h.JWTManager.Parse(headerParts[1])
+	return h.tokenManager.Parse(headerParts[1])
 }
 
 func getUserId(c *fiber.Ctx) (int, error) {

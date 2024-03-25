@@ -9,16 +9,16 @@ import (
 )
 
 type Handler struct {
-	services   *service.Service
-	validate   *validator.Validate
-	JWTManager auth.TokenManager
+	services     *service.Service
+	validate     *validator.Validate
+	tokenManager auth.TokenManager
 }
 
 func NewHandler(services *service.Service, tokenManager auth.TokenManager) *Handler {
 	return &Handler{
-		services:   services,
-		validate:   validator.New(validator.WithRequiredStructEnabled()),
-		JWTManager: tokenManager}
+		services:     services,
+		validate:     validator.New(validator.WithRequiredStructEnabled()),
+		tokenManager: tokenManager}
 }
 
 func (h *Handler) SetupRoutes(app *fiber.App) {
